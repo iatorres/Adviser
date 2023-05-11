@@ -186,72 +186,17 @@ def main():
 
 main()
 
-
-
-
-
-
-
-
-
-
-
-
-
 #NOTIFIER
 
 
 
 
-     
-
-
-
-'''
-Programa corriendo aprox desde 8 am hasta 15 pm y reanuda 23 pm hasta 3am.
-
-1) primero necesito obtener las variablles de Hora,Minuto y Dia. --
-2) bucle que vaya viendo las horas, en el momento que lo haga arrancar deberia ser mayor a las 8.
-3) ¿Como romper el bucle, como inicializarlo?
-
-4)Una vez en el bucle, ¿Como hago q mi pc no se rompa?
-    Hago funcion que reconozco dia hora minuto
-
-    17:20
-
-    while se pause unas 35 
-
-    18:00
-
-
-    now=datetime.now()
-        dia=datetime.today().weekday()
-        hora=now.hour
-        minuto=now.minute
-
-
-
-
-'''
-        
-'''
-if hora >= 22:
-    
-    title="Nery se la come"
-
-    message="A ver como anda esta mierda"
-
-    notification.notify(title=title,
-                    message=message,
-                    timeout=10,
-                    toast=False
-                    )'''     
 
 
 
 
 
-'''
-tengo que llenar la base de datos, tengo que empezar a ver cuando falta 1 o 2 horas y tambien podriap ner como un modo pilotoi
 
-'''
+
+
+

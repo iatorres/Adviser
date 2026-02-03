@@ -161,7 +161,7 @@ def popOut(lista,hora):
             title=titulo,
             msg=mensaje,
             duration="long",
-            icon=r"icon.png")
+            icon=os.path.join(os.path.dirname(__file__), "icon.png"))
             
 
     toast.set_audio(audio.LoopingCall, loop=True)
@@ -174,7 +174,7 @@ def popOut(lista,hora):
 
 
 def main():
-
+    print("Hola")
     now=datetime.now()
     dia=datetime.today().weekday()
     hora=now.hour
@@ -187,16 +187,3 @@ def main():
 main()
 
 #NOTIFIER
-
-
-
-
-
-
-
-
-
-
-
-
-

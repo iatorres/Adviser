@@ -9,7 +9,7 @@ from datetime import datetime
 
 diasN=["lunes","martes","miercoles","jueves","viernes","sabado","domingo"]
 
-horas_programa=[8,9,10,11,12,13,14,15,22,23,0,]
+horas_programa=[8,9,10,11,12,13,14,15,16,23,0,]
 
 
 BD={  #Titulo y mensaje de cada horario
@@ -99,6 +99,7 @@ def runRutina(dia):
 
     actual=datetime.now()
     hora=actual.hour
+    minuto=actual.minute
 
 
     if dia in BD:
@@ -106,7 +107,7 @@ def runRutina(dia):
     
 
 
-        if (hora>=8 and hora<15) or (hora>=22) or (hora == 0):
+        if (hora>=8 and hora<16) or (hora>=22) or (hora == 0):
             popOut(diaLista,hora)
                 
 
@@ -114,11 +115,12 @@ def runRutina(dia):
 
             time.sleep( (3600 - (minuto*60) ))  #el programa descansa hasta la siguiente hora
             
+            actual=datetime.now() # Actualizamos el tiempo actual
             horaN=actual.hour
+            minuto=actual.minute # Actualizamos el minuto para el siguiente sleep
                                             
             if (horaN != hora):
                 hora=horaN
-                minuto=actual.minute
                 popOut(diaLista,hora)
 
         if hora > 8 or hora < 23:

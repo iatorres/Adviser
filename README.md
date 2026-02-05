@@ -4,6 +4,8 @@
 
 El sistema actúa como un "compañero de responsabilidad", recordándote tus actividades, descansos, tiempos de estudio y rutinas de gimnasio según un cronograma predefinido.
 
+El proyecto nacio, al yo ser un estudiante tendiente a la **procrastinación**, ante esta problematica se me ocurrio una solucion, crear un "asistente" el cual me este ayudando y guiando a resolver mis actividades, fue pensado en formato rutina.
+
 ## 🚀 Características
 
 - **Notificaciones Nativas:** Se integra perfectamente con el centro de actividades de Windows 10/11.
@@ -79,7 +81,8 @@ python adviser_main.py
 - Si coincide con un horario programado, lanzará una notificación emergente.
 - Si no hay actividades para la hora actual, el sistema esperará o te notificará que estás "Fuera de horario".
 
-## 👤 Autor
+## 🔨Próximas actualizaciones
 
-**Ian Torres**
-- GitHub: iatorres
+-Crear una interfaz gráfica.
+-Base de datos más amigable para el usuario.
+-Crear actividades temporales (actividad que ocurrira solo ese día y no modificará la rutina general)

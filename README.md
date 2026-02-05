@@ -83,6 +83,6 @@ python adviser_main.py
 
 ## 🔨Próximas actualizaciones
 
--Crear una interfaz gráfica.
--Base de datos más amigable para el usuario.
--Crear actividades temporales (actividad que ocurrira solo ese día y no modificará la rutina general)
+- Crear una interfaz gráfica.
+- Base de datos más amigable para el usuario.
+- Crear actividades temporales (actividad que ocurrira solo ese día y no modificará la rutina general)

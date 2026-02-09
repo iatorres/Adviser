@@ -25,6 +25,16 @@ def cargar_rutina():
         print("ERROR: El archivo 'rutina.json' tiene un formato inválido.")
         return {}
 
+def guardar_rutina(datos):
+    """Guarda la base de datos en el archivo JSON."""
+    ruta_json = os.path.join(os.path.dirname(__file__), "rutina.json")
+    try:
+        with open(ruta_json, "w", encoding="utf-8") as f:
+            json.dump(datos, f, indent=4, ensure_ascii=False)
+        print(">> Rutina guardada exitosamente.")
+    except Exception as e:
+        print(f"ERROR al guardar: {e}")
+
 BD = cargar_rutina()
 
 #Funciones
@@ -34,10 +44,58 @@ def arrancar_programa():
     # Ya no pasamos el día fijo, porque el día cambia si el programa corre 24/7
     runRutina()
 
+def editar_rutina():
+    """Permite al usuario editar la rutina desde la consola."""
+    while True:
+        print("\n--- EDITOR DE RUTINA ---")
+        print("Días disponibles:", ", ".join(diasN))
+        dia_input = input("Ingresa el día a editar (o 'volver' para ir al menú): ").lower().strip()
+
+        if dia_input == "volver":
+            break
+
+        if dia_input not in diasN:
+            print("Día no válido. Por favor ingresa un día de la semana (ej: lunes).")
+            continue
+
+        # Si el día no existe en la BD, inicializarlo
+        if dia_input not in BD:
+            BD[dia_input] = []
+
+        lista_dia = BD[dia_input]
+
+        # Asegurar que la lista tenga el tamaño correcto según horas_programa
+        while len(lista_dia) < len(horas_programa):
+            lista_dia.append(["(Vacío)", "Sin actividad asignada"])
+
+        print(f"\nCronograma para {dia_input.capitalize()}:")
+        for i, hora in enumerate(horas_programa):
+            titulo = lista_dia[i][0]
+            print(f"{i + 1}. [{hora}:00 hs] {titulo}")
+
+        try:
+            seleccion = int(input("\nElige el número de la actividad a modificar (0 para cancelar): "))
+            if seleccion == 0:
+                continue
+            
+            idx = seleccion - 1
+            if 0 <= idx < len(horas_programa):
+                print(f"Editando actividad de las {horas_programa[idx]}:00 hs...")
+                nuevo_titulo = input("Nuevo Título: ")
+                nuevo_mensaje = input("Nuevo Mensaje: ")
+                lista_dia[idx] = [nuevo_titulo, nuevo_mensaje]
+                BD[dia_input] = lista_dia
+                guardar_rutina(BD)
+            else:
+                print("Número fuera de rango.")
+        except ValueError:
+            print("Entrada inválida. Ingresa un número.")
+
 def runRutina():
     notificado_fuera = False # Evita spam de notificaciones "Fuera de horario"
 
     while True:
+        print("3")
         actual = datetime.now()
         dia = diasN[actual.weekday()]
         hora = actual.hour
@@ -83,6 +141,7 @@ def runRutina():
         # Dormir hasta la siguiente hora en punto
         # Calculamos segundos exactos para despertar cuando cambie la hora
         tiempo_espera = 3600 - (minuto * 60 + segundo)
+        print("1")
         print(f"[{actual.strftime('%H:%M:%S')}] Durmiendo {tiempo_espera + 2} segundos.../ {(tiempo_espera + 2)/60} minutos.../")
         time.sleep(tiempo_espera + 2) # +2 segundos de margen para asegurar el cambio de hora
         
@@ -114,14 +173,25 @@ def popOut(lista,hora):
 
 
 def main():
-    print("Arranco el programa")
-    now=datetime.now()
-    dia=datetime.today().weekday()
-    hora=now.hour
-    minuto=now.minute
-    
-    arrancar_programa()
-    
+    print("Bienvenido a Adviser 📅")
+    while True:
+        print("\nMENÚ PRINCIPAL")
+        print("1. Iniciar Asistente")
+        print("2. Editar Rutina")
+        print("3. Salir")
+        
+        opcion = input("Selecciona una opción: ")
+        
+        if opcion == "1":
+            print("Iniciando servicio de notificaciones... (Cierra la ventana para detener)")
+            arrancar_programa()
+        elif opcion == "2":
+            editar_rutina()
+        elif opcion == "3":
+            print("¡Hasta luego!")
+            break
+        else:
+            print("Opción no válida.")
 
 
 main()

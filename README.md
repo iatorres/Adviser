@@ -54,10 +54,10 @@ python adviser_main.py
 - Si no hay actividades para la hora actual, el sistema esperará o te notificará que estás "Fuera de horario".
 
 **Funcionalidades:** 
-+- 📋 Ver Rutina: Visualiza tu cronograma semanal. El día y hora actual se resaltarán automáticamente. 
-+- ✏️ Editar: Selecciona un día, modifica los títulos y mensajes de tus actividades y guarda los cambios. 
-+- ⏯️ Iniciar asistente: Activa el hilo en segundo plano que verificará la hora y te enviará notificaciones. 
-+- ⚙️ Personalización Ya no es necesario editar el código fuente para cambiar las actividades. Utiliza la pestaña Editar dentro de la aplicación. Los datos se guardan en rutina.json.
+- 📋 Ver Rutina: Visualiza tu cronograma semanal. El día y hora actual se resaltarán automáticamente. 
+- ✏️ Editar: Selecciona un día, modifica los títulos y mensajes de tus actividades y guarda los cambios. 
+- ⏯️ Iniciar asistente: Activa el hilo en segundo plano que verificará la hora y te enviará notificaciones. 
+- ⚙️ Personalización Ya no es necesario editar el código fuente para cambiar las actividades. Utiliza la pestaña Editar dentro de la aplicación. Los datos se guardan en rutina.json.
 ## 🔨Próximas actualizaciones
 - Crear actividades temporales (actividad que ocurrira solo ese día y no modificará la rutina general).
 - Mejorar el diseño de la interfaz.

@@ -1,0 +1,67 @@
+{
+    "lunes": [
+        ["Arrancamos el dia!!", "Tocan 2 de Gimnasio."],
+        ["Deberias estar entrenando", "Ponele ganas!!"],
+        ["Hora de OCIO", "Distraete un rato."],
+        ["TOCA ESTUDIAR", "Activa con la facultad!!"],
+        ["A seguir estudiando 1horita", "CON GANAS!!"],
+        ["Hora de un buen almuerzo", "A recuperar el gimnasio"],
+        ["Dos hora de trabajo personal", "Hay que enfocarse en los proyectos"],
+        ["Una horita más y a ir a la universidad!", "Focus!!"],
+        ["Momento de emprender viaje!", "Exitos!"],
+        ["Solo una hora", "Recien llegas de la facultad, distraete y a dormir"],
+        ["TOCA IR A DORMIR!!", "Hay que descansar campeon excelente dia!"]
+    ],
+    "martes": [
+        ["Arrancamos el dia!!", "Tocan 2 de Gimnasio."],
+        ["Deberias estar entrenando", "Ponele ganas!!"],
+        ["Hora de OCIO", "Distraete un rato."],
+        ["TOCA ESTUDIAR", "Activa con la facultad!!"],
+        ["A seguir estudiando 1horita", "CON GANAS!!"],
+        ["Hora de un buen almuerzo", "A recuperar el gimnasio"],
+        ["Dos hora de trabajo personal", "Hay que enfocarse en los proyectos"],
+        ["Una horita más y a ir a la universidad!", "Focus!!"],
+        ["Momento de emprender viaje!", "Exitos!"],
+        ["Solo una hora", "Recien llegas de la facultad, distraete y a dormir"],
+        ["TOCA IR A DORMIR!!", "Hay que descansar campeon excelente dia!"]
+    ],
+    "miercoles": [
+        ["Arrancamos el dia!!", "Tocan 2 de Gimnasio."],
+        ["Deberias estar entrenando", "Ponele ganas!!"],
+        ["Hora de OCIO", "Distraete un rato."],
+        ["TOCA ESTUDIAR", "Activa con la facultad!!"],
+        ["A seguir estudiando 1horita", "CON GANAS!!"],
+        ["Hora de un buen almuerzo", "A recuperar el gimnasio"],
+        ["Dos hora de trabajo personal", "Hay que enfocarse en los proyectos"],
+        ["Una horita más y a ir a la universidad!", "Focus!!"],
+        ["Momento de emprender viaje!", "Exitos!"],
+        ["Solo una hora", "Recien llegas de la facultad, distraete y a dormir"],
+        ["TOCA IR A DORMIR!!", "Hay que descansar campeon excelente dia!"]
+    ],
+    "jueves": [
+        ["Arrancamos el dia!!", "Tocan 2 de Gimnasio."],
+        ["Deberias estar entrenando", "Ponele ganas!!"],
+        ["Hora de OCIO", "Distraete un rato."],
+        ["TOCA ESTUDIAR", "Activa con la facultad!!"],
+        ["A seguir estudiando 1horita", "CON GANAS!!"],
+        ["Hora de un buen almuerzo", "A recuperar el gimnasio"],
+        ["Dos hora de trabajo personal", "Hay que enfocarse en los proyectos"],
+        ["Una horita más y a ir a la universidad!", "Focus!!"],
+        ["Momento de emprender viaje!", "Exitos!"],
+        ["Solo una hora", "Recien llegas de la facultad, distraete y a dormir"],
+        ["TOCA IR A DORMIR!!", "Hay que descansar campeon excelente dia!"]
+    ],
+    "viernes": [
+        ["Arrancamos el dia!!", "Tocan 2 de Gimnasio."],
+        ["Deberias estar entrenando", "Ponele ganas!!"],
+        ["Hora de OCIO", "Distraete un rato."],
+        ["TOCA ESTUDIAR", "Activa con la facultad!!"],
+        ["A seguir estudiando 1horita", "CON GANAS!!"],
+        ["Hora de un buen almuerzo", "A recuperar el gimnasio"],
+        ["Dos hora de trabajo personal", "Hay que enfocarse en los proyectos"],
+        ["Una horita más y a ir a la universidad!", "Focus!!"],
+        ["Momento de emprender viaje!", "Exitos!"],
+        ["Solo una hora", "Recien llegas de la facultad, distraete y a dormir"],
+        ["TOCA IR A DORMIR!!", "Hay que descansar campeon excelente dia!"]
+    ]
+}

@@ -5,7 +5,7 @@ a = Analysis(
     ['adviser_main.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('rutina.json', '.'), ('icon.png', '.')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

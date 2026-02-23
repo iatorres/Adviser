@@ -36,6 +36,9 @@
       <button class="nav-btn" data-panel="editar">
         <span class="nav-icon">✦</span> Editar
       </button>
+      <button class="nav-btn" data-panel="cronometro">
+        <span class="nav-icon">◎</span> Cronómetro
+      </button>
       <button class="nav-btn" data-panel="config">
         <span class="nav-icon">⚙</span> Configuración
       </button>
@@ -96,6 +99,114 @@
       </div>
     </div>
 
+    <!-- Panel: Cronómetro de tareas -->
+    <div class="panel" id="panel-cronometro">
+      <div class="panel-header">
+        <h2>Cronómetro de tareas</h2>
+        <p>Tareas urgentes fuera de tu rutina habitual</p>
+      </div>
+
+      <!-- Vista SETUP (antes de iniciar) -->
+      <div id="crono-setup">
+        <!-- Tiempo límite -->
+        <div class="crono-section">
+          <div class="crono-section-label">// tiempo límite</div>
+          <div class="crono-time-selector">
+            <button class="crono-time-btn active" data-min="15">15 min</button>
+            <button class="crono-time-btn" data-min="30">30 min</button>
+            <button class="crono-time-btn" data-min="45">45 min</button>
+            <button class="crono-time-btn" data-min="60">1 hora</button>
+            <button class="crono-time-btn" data-min="90">1h 30m</button>
+            <button class="crono-time-btn" data-min="120">2 horas</button>
+          </div>
+          <div class="crono-custom-row">
+            <span class="crono-custom-label">Tiempo personalizado:</span>
+            <input type="number" id="crono-custom-min" class="crono-custom-input" placeholder="min" min="1" max="999">
+            <button class="crono-custom-set" onclick="setTiempoCustom()">→ Aplicar</button>
+          </div>
+          <div class="crono-tiempo-selected">
+            Tiempo seleccionado: <span id="crono-tiempo-label" class="accent">15 minutos</span>
+          </div>
+        </div>
+
+        <!-- Agregar tareas -->
+        <div class="crono-section">
+          <div class="crono-section-label">// agregar tareas</div>
+          <div class="crono-add-row">
+            <input type="text" id="crono-nueva-tarea" class="crono-task-input" placeholder="Describí la tarea..." maxlength="120" onkeydown="if(event.key==='Enter') agregarTareaSetup()">
+            <button class="crono-add-btn" onclick="agregarTareaSetup()">+ Agregar</button>
+          </div>
+          <div id="crono-setup-lista" class="crono-setup-lista">
+            <div class="crono-empty-hint">Aún no hay tareas. Agregá al menos una para comenzar.</div>
+          </div>
+        </div>
+
+        <!-- Botón iniciar -->
+        <div class="crono-start-bar">
+          <button class="btn-crono-start" id="btn-crono-start" onclick="iniciarCronometro()" disabled>
+            ▶ Iniciar sesión
+          </button>
+        </div>
+      </div>
+
+      <!-- Vista RUNNING (cronómetro activo) -->
+      <div id="crono-running" style="display:none; flex-direction:column; flex:1; overflow:hidden;">
+
+        <!-- Display del tiempo -->
+        <div class="crono-display-wrap">
+          <div class="crono-ring-container">
+            <svg class="crono-ring-svg" viewBox="0 0 120 120">
+              <circle class="crono-ring-bg" cx="60" cy="60" r="52"/>
+              <circle class="crono-ring-fill" id="crono-ring-fill" cx="60" cy="60" r="52"/>
+            </svg>
+            <div class="crono-time-display" id="crono-time-display">00:00</div>
+          </div>
+          <div class="crono-session-info">
+            <div class="crono-tasks-counter">
+              <span id="crono-done-count">0</span> / <span id="crono-total-count">0</span>
+              <span class="crono-tasks-label">tareas completadas</span>
+            </div>
+            <div class="crono-progress-bar-wrap">
+              <div class="crono-progress-bar" id="crono-progress-bar" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Lista de tareas activa (scrollable) -->
+        <div class="crono-running-lista-wrap">
+          <div class="crono-section-label" style="padding: 0 32px; margin-bottom:8px;">// tareas de la sesión</div>
+          <!-- Agregar tarea mientras corre -->
+          <div class="crono-add-row crono-add-row-running">
+            <input type="text" id="crono-nueva-tarea-running" class="crono-task-input" placeholder="Agregar tarea en curso..." maxlength="120" onkeydown="if(event.key==='Enter') agregarTareaRunning()">
+            <button class="crono-add-btn" onclick="agregarTareaRunning()">+</button>
+          </div>
+          <div id="crono-running-lista" class="crono-running-lista"></div>
+        </div>
+
+        <!-- Barra inferior de acciones -->
+        <div class="crono-action-bar">
+          <button class="btn-crono-finish" id="btn-crono-finish" onclick="finalizarSesion()" disabled>
+            ✓ Finalizar sesión
+          </button>
+          <button class="btn-crono-cancel" onclick="cancelarSesion()">
+            ✕ Cancelar
+          </button>
+        </div>
+      </div>
+
+      <!-- Vista RESUMEN (al finalizar) -->
+      <div id="crono-resumen" style="display:none; flex-direction:column; flex:1; overflow:hidden;">
+        <div class="crono-resumen-content">
+          <div class="crono-resumen-icon" id="crono-resumen-icon">✓</div>
+          <div class="crono-resumen-titulo" id="crono-resumen-titulo">¡Sesión completada!</div>
+          <div class="crono-resumen-sub" id="crono-resumen-sub">Completaste todas las tareas.</div>
+          <div class="crono-resumen-stats" id="crono-resumen-stats"></div>
+          <button class="btn-crono-nueva" onclick="nuevaSesion()">◈ Nueva sesión</button>
+        </div>
+      </div>
+
+    </div><!-- /panel-cronometro -->
+
     <!-- Panel: Config -->
     <div class="panel" id="panel-config">
       <div class="panel-header">
@@ -148,6 +259,16 @@
 
 <!-- Toast de confirmación -->
 <div id="toast"></div>
+
+<!-- Overlay de alarma -->
+<div id="alarm-overlay" style="display:none;">
+  <div class="alarm-box">
+    <div class="alarm-icon">⏰</div>
+    <div class="alarm-titulo">¡Tiempo agotado!</div>
+    <div class="alarm-sub">No completaste todas las tareas en el tiempo límite.</div>
+    <button class="alarm-btn" onclick="cerrarAlarma()">Entendido</button>
+  </div>
+</div>
 
 <script src="script.js"></script>
 </body>

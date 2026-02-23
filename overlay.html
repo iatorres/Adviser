@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Adviser · Overlay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:           #080A0F;
+    --bg2:          #0D1018;
+    --bg3:          #12151E;
+    --border:       #1C2030;
+    --border2:      #252B3D;
+    --accent:       #e100ff;
+    --accent-glow:  rgba(247, 0, 255, 0.12);
+    --accent-glow2: rgba(247, 0, 255, 0.20);
+    --green:        #00E5A0;
+    --green-dim:    rgba(0, 229, 160, 0.15);
+    --orange:       #FF8C42;
+    --red:          #FF4458;
+    --red-glow:     rgba(255,68,88,0.12);
+    --text1:        #E8EBF5;
+    --text2:        #6B7494;
+    --text3:        #2E3450;
+    --mono:         'JetBrains Mono', monospace;
+    --sans:         'Outfit', sans-serif;
+  }
+
+  [data-theme="light"] {
+    --bg:           #F0F2FA;
+    --bg2:          #FFFFFF;
+    --bg3:          #E8EBF8;
+    --border:       #D0D5EE;
+    --border2:      #B8BEDD;
+    --accent:       #9000CC;
+    --accent-glow:  rgba(144, 0, 204, 0.10);
+    --accent-glow2: rgba(144, 0, 204, 0.18);
+    --green:        #007A50;
+    --green-dim:    rgba(0, 122, 80, 0.12);
+    --orange:       #C05E00;
+    --red:          #E0253A;
+    --red-glow:     rgba(224,37,58,0.10);
+    --text1:        #0E1120;
+    --text2:        #4A5070;
+    --text3:        #9BA3C8;
+  }
+
+  html, body {
+    width: 280px;
+    background: transparent;
+    overflow: hidden;
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+  }
+
+  /* ── Contenedor principal ─────────────────────────────────────────────── */
+  #widget {
+    width: 280px;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow:
+      0 12px 40px rgba(0,0,0,0.55),
+      0 0 0 1px rgba(255,255,255,0.03),
+      0 0 32px var(--accent-glow);
+    position: relative;
+  }
+
+  /* Línea de acento superior */
+  #widget::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 16px; right: 16px;
+    height: 1.5px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    z-index: 2;
+  }
+
+  /* ── Header (zona de arrastre) ────────────────────────────────────────── */
+  #widget-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 14px 10px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    cursor: grab;
+    -webkit-app-region: drag;
+  }
+
+  #widget-header:active { cursor: grabbing; }
+
+  .wh-left {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .wh-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 6px var(--accent);
+    flex-shrink: 0;
+    animation: glow-pulse 2s infinite;
+  }
+
+  @keyframes glow-pulse {
+    0%, 100% { box-shadow: 0 0 4px var(--accent); }
+    50%       { box-shadow: 0 0 10px var(--accent), 0 0 18px var(--accent-glow2); }
+  }
+
+  .wh-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 500;
+    color: var(--text3);
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+
+  .wh-drag-hint {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 0.06em;
+    opacity: 0.5;
+  }
+
+  /* ── Cuerpo ───────────────────────────────────────────────────────────── */
+  #widget-body {
+    padding: 20px 20px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  /* ── Anillo grande ────────────────────────────────────────────────────── */
+  .ring-wrap {
+    position: relative;
+    width: 140px;
+    height: 140px;
+  }
+
+  .ring-svg {
+    width: 140px;
+    height: 140px;
+    transform: rotate(-90deg);
+  }
+
+  .ring-bg {
+    fill: none;
+    stroke: var(--border2);
+    stroke-width: 7;
+  }
+
+  .ring-fill {
+    fill: none;
+    stroke: var(--green);
+    stroke-width: 7;
+    stroke-linecap: round;
+    /* 2π × 60 = 376.99 */
+    stroke-dasharray: 376.99;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1s linear, stroke 0.5s ease;
+    filter: drop-shadow(0 0 6px var(--green));
+  }
+
+  .ring-fill.warning {
+    stroke: var(--orange);
+    filter: drop-shadow(0 0 6px var(--orange));
+  }
+
+  .ring-fill.danger {
+    stroke: var(--red);
+    filter: drop-shadow(0 0 8px var(--red));
+    animation: danger-pulse 1s infinite;
+  }
+
+  @keyframes danger-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+  }
+
+  /* Contenido central del anillo */
+  .ring-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+  }
+
+  .ring-time {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text1);
+    letter-spacing: 0.04em;
+    line-height: 1;
+  }
+
+  .ring-time-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* ── Tareas pendientes ────────────────────────────────────────────────── */
+  .tasks-block {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .tasks-count-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .tasks-count-num {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text1);
+    line-height: 1;
+  }
+
+  .tasks-count-num.all-done {
+    color: var(--green);
+    text-shadow: 0 0 12px var(--green);
+  }
+
+  .tasks-count-label {
+    font-family: var(--mono);
+    font-size: 8px;
+    color: var(--text3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .tasks-divider {
+    width: 1px;
+    height: 36px;
+    background: var(--border2);
+    flex-shrink: 0;
+  }
+
+  .tasks-info-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .tasks-info-text {
+    font-size: 11px;
+    color: var(--text2);
+    line-height: 1.4;
+  }
+
+  .tasks-info-text strong {
+    color: var(--text1);
+    font-weight: 600;
+  }
+
+  /* Mini barra de progreso */
+  .tasks-prog-wrap {
+    height: 3px;
+    background: var(--border2);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .tasks-prog-fill {
+    height: 100%;
+    background: var(--green);
+    border-radius: 99px;
+    transition: width 300ms ease, background 0.5s ease;
+    box-shadow: 0 0 5px var(--green-dim);
+  }
+
+  /* ── Footer con botón restaurar ───────────────────────────────────────── */
+  #widget-footer {
+    padding: 0 16px 16px;
+  }
+
+  .btn-restaurar {
+    width: 100%;
+    padding: 9px;
+    background: var(--accent-glow);
+    border: 1px solid rgba(200, 0, 255, 0.25);
+    border-radius: 10px;
+    color: var(--accent);
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: background 140ms;
+    -webkit-app-region: no-drag;
+  }
+
+  .btn-restaurar:hover { background: var(--accent-glow2); }
+</style>
+</head>
+<body>
+
+<div id="widget">
+
+  <!-- Header / zona de arrastre -->
+  <div id="widget-header">
+    <div class="wh-left">
+      <div class="wh-dot"></div>
+      <span class="wh-label">Adviser · En curso</span>
+    </div>
+    <span class="wh-drag-hint">⠿ arrastrar</span>
+  </div>
+
+  <!-- Cuerpo -->
+  <div id="widget-body">
+
+    <!-- Anillo de tiempo -->
+    <div class="ring-wrap">
+      <svg class="ring-svg" viewBox="0 0 140 140">
+        <circle class="ring-bg"   cx="70" cy="70" r="60"/>
+        <circle class="ring-fill" id="ov-ring" cx="70" cy="70" r="60"/>
+      </svg>
+      <div class="ring-center">
+        <div class="ring-time" id="ov-time">--:--</div>
+        <div class="ring-time-label">restante</div>
+      </div>
+    </div>
+
+    <!-- Bloque de tareas -->
+    <div class="tasks-block">
+      <div class="tasks-count-col">
+        <div class="tasks-count-num" id="ov-pendientes">-</div>
+        <div class="tasks-count-label">pendientes</div>
+      </div>
+      <div class="tasks-divider"></div>
+      <div class="tasks-info-col">
+        <div class="tasks-info-text" id="ov-tasks-text">Cargando...</div>
+        <div class="tasks-prog-wrap">
+          <div class="tasks-prog-fill" id="ov-prog" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div id="widget-footer">
+    <button class="btn-restaurar" onclick="restaurarApp()">↗ Volver a Adviser</button>
+  </div>
+
+</div>
+
+<script>
+  const ov = {
+    segsRestantes: 0,
+    segsTotal:     0,
+    hechas:        0,
+    total:         0,
+  };
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  window.addEventListener('pywebviewready', async () => {
+    const estado = await window.pywebview.api.overlay_get_estado();
+    ov.segsRestantes = estado.segs_restantes;
+    ov.segsTotal     = estado.segs_total;
+    ov.hechas        = estado.hechas;
+    ov.total         = estado.total;
+
+    // Aplicar tema
+    if (estado.tema === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+    }
+
+    renderOverlay();
+  });
+
+  // ── Tick desde Python (cada segundo) ──────────────────────────────────────
+  window._ovTick = function(segsRestantes, hechas, total) {
+    ov.segsRestantes = segsRestantes;
+    ov.hechas        = hechas;
+    ov.total         = total;
+    renderOverlay();
+  };
+
+  // ── Render ────────────────────────────────────────────────────────────────
+  function renderOverlay() {
+    // Tiempo
+    const mm = String(Math.floor(ov.segsRestantes / 60)).padStart(2, '0');
+    const ss = String(ov.segsRestantes % 60).padStart(2, '0');
+    document.getElementById('ov-time').textContent = `${mm}:${ss}`;
+
+    // Anillo
+    const CIRC    = 376.99;
+    const progres = ov.segsTotal > 0 ? ov.segsRestantes / ov.segsTotal : 0;
+    const offset  = CIRC * (1 - progres);
+    const ring    = document.getElementById('ov-ring');
+    ring.style.strokeDashoffset = offset;
+    ring.classList.remove('warning', 'danger');
+    if (progres <= 0.15)      ring.classList.add('danger');
+    else if (progres <= 0.35) ring.classList.add('warning');
+
+    // Tareas
+    const pendientes = ov.total - ov.hechas;
+    const numEl      = document.getElementById('ov-pendientes');
+    numEl.textContent = pendientes;
+    numEl.classList.toggle('all-done', pendientes === 0);
+
+    const pct = ov.total > 0 ? (ov.hechas / ov.total * 100) : 0;
+    document.getElementById('ov-prog').style.width = pct + '%';
+
+    const textoEl = document.getElementById('ov-tasks-text');
+    if (pendientes === 0) {
+      textoEl.innerHTML = '<strong>¡Todo listo!</strong><br>Podés finalizar la sesión.';
+    } else {
+      textoEl.innerHTML = `<strong>${ov.hechas}</strong> de <strong>${ov.total}</strong> completadas`;
+    }
+  }
+
+  // ── Restaurar ventana principal ───────────────────────────────────────────
+  function restaurarApp() {
+    if (window.pywebview) window.pywebview.api.overlay_restaurar_app();
+  }
+</script>
+</body>
+</html>

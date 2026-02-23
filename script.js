@@ -9,13 +9,13 @@ let state = {
   diaActual:    "lunes",
   horaActual:   0,
   asistente:    false,
+  tema:         "dark",
 };
 
 // ── Inicialización ────────────────────────────────────────────────────────────
 window.addEventListener('pywebviewready', async () => {
   const api = window.pywebview.api;
 
-  // Obtener estado inicial y rutina en paralelo
   const [estado, rutina] = await Promise.all([
     api.get_estado_inicial(),
     api.get_rutina(),
@@ -28,16 +28,22 @@ window.addEventListener('pywebviewready', async () => {
   state.horaActual = estado.hora_actual;
   state.asistente  = estado.asistente;
 
+  // Leer tema guardado
+  if (estado.tema) {
+    state.tema = estado.tema;
+  }
+
   document.getElementById('fecha-str').textContent = estado.fecha_str;
 
-  // Construir UI
+  // Aplicar tema inicial
+  aplicarTema(state.tema);
+
   buildDaySelector();
   buildHoursList();
   buildEditList();
   updateAsistenteUI();
   startClock();
 
-  // Ocultar loading
   setTimeout(() => {
     const l = document.getElementById('loading');
     l.classList.add('hidden');
@@ -48,11 +54,34 @@ window.addEventListener('pywebviewready', async () => {
 // Fallback si pywebview no está disponible (debug en browser)
 window.addEventListener('DOMContentLoaded', () => {
   if (!window.pywebview) {
+    // Cargar tema desde localStorage como fallback en browser
+    const temaGuardado = localStorage.getItem('adviser_tema') || 'dark';
+    state.tema = temaGuardado;
+    aplicarTema(temaGuardado);
     setTimeout(() => {
       document.getElementById('loading')?.remove();
     }, 500);
   }
 });
+
+// ── Función central para aplicar el tema ──────────────────────────────────────
+function aplicarTema(tema) {
+  state.tema = tema;
+  const isDark = tema === 'dark';
+
+  // Aplica/quita el atributo en <html> para que las variables CSS cambien
+  if (isDark) {
+    document.documentElement.removeAttribute('data-theme');
+  } else {
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+
+  // Sincronizar el toggle y el badge en el panel de config
+  const toggle = document.getElementById('tema-toggle');
+  const badge  = document.getElementById('tema-badge');
+  if (toggle) toggle.checked = isDark;
+  if (badge)  badge.textContent = isDark ? 'Oscuro' : 'Claro';
+}
 
 // ── Reloj en tiempo real ──────────────────────────────────────────────────────
 function startClock() {
@@ -62,7 +91,6 @@ function startClock() {
     const mm  = String(now.getMinutes()).padStart(2,'0');
     document.getElementById('status-time').textContent = `${hh}:${mm}`;
 
-    // Actualizar hora actual y resaltado "AHORA"
     const nuevaHora = now.getHours();
     const nuevoDia  = DIAS[now.getDay() === 0 ? 6 : now.getDay() - 1];
     if (nuevaHora !== state.horaActual || nuevoDia !== state.diaActual) {
@@ -76,7 +104,6 @@ function startClock() {
 }
 
 // ── Construcción de la lista de horas (vista) ─────────────────────────────────
-// Se hace UNA sola vez — después solo se actualizan textos y clases.
 function buildHoursList() {
   const container = document.getElementById('hours-list');
   container.innerHTML = '';
@@ -97,7 +124,6 @@ function buildHoursList() {
     container.appendChild(card);
   }
 
-  // Cargar datos del día actual
   renderDia(state.diaVista);
 }
 
@@ -116,7 +142,6 @@ function renderDia(dia) {
 }
 
 function refreshHoraActual() {
-  // Solo actualiza clases, sin re-render completo
   for (let h = 0; h < 24; h++) {
     const card    = document.getElementById(`hc-${h}`);
     if (!card) continue;
@@ -147,7 +172,6 @@ function selectDia(dia) {
 }
 
 // ── Panel edición ─────────────────────────────────────────────────────────────
-// También construido una vez, luego solo se actualizan valores.
 function buildEditList() {
   const container = document.getElementById('edit-list');
   container.innerHTML = '';
@@ -197,7 +221,6 @@ async function guardarDia() {
     await window.pywebview.api.guardar_dia(state.diaEditar, entradas);
   }
 
-  // Si estamos viendo el mismo día, actualizar vista
   if (state.diaEditar === state.diaVista) renderDia(state.diaVista);
 
   showToast(`Rutina del ${capitalize(state.diaEditar)} guardada ✓`);
@@ -231,7 +254,6 @@ function updateAsistenteUI() {
   }
 }
 
-// Callback llamado desde Python cuando salta una notificación de hora
 window._onAsistenteHora = (hora) => {
   state.horaActual = hora;
   refreshHoraActual();
@@ -252,12 +274,16 @@ document.querySelectorAll('.nav-btn[data-panel]').forEach(btn => {
 
 // ── Configuración / Tema ──────────────────────────────────────────────────────
 function onTemaChange(isDark) {
-  const badge = document.getElementById('tema-badge');
-  badge.textContent = isDark ? 'Oscuro' : 'Claro';
-  // Por ahora solo guardamos la preferencia — cambiar variables CSS en runtime
-  // requeriría un segundo set de variables; se puede extender fácilmente.
+  const nuevoTema = isDark ? 'dark' : 'light';
+
+  // Aplicar el tema visualmente
+  aplicarTema(nuevoTema);
+
+  // Guardar en backend (pywebview) o localStorage (fallback)
   if (window.pywebview) {
-    window.pywebview.api.guardar_tema(isDark ? 'dark' : 'light');
+    window.pywebview.api.guardar_tema(nuevoTema);
+  } else {
+    localStorage.setItem('adviser_tema', nuevoTema);
   }
 }
 

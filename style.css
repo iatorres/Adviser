@@ -24,6 +24,25 @@
     --transition:  160ms cubic-bezier(0.4,0,0.2,1);
   }
 
+  /* ── Tema Claro ─────────────────────────────────────────────────────────── */
+  [data-theme="light"] {
+    --bg:          #F4F6FC;
+    --bg2:         #FFFFFF;
+    --bg3:         #EDF0FA;
+    --border:      #D8DCF0;
+    --border2:     #BEC4E0;
+    --accent:      #9000CC;
+    --accent-dim:  #6A00A0;
+    --accent-glow: rgba(144, 0, 204, 0.08);
+    --accent-glow2:rgba(144, 0, 204, 0.15);
+    --red:         #E0253A;
+    --red-dim:     #B81E2F;
+    --red-glow:    rgba(224,37,58,0.08);
+    --text1:       #0E1120;
+    --text2:       #4A5070;
+    --text3:       #9BA3C8;
+  }
+
   html, body {
     height: 100%;
     background: var(--bg);
@@ -32,6 +51,7 @@
     font-size: 14px;
     overflow: hidden;
     -webkit-font-smoothing: antialiased;
+    transition: background 200ms ease, color 200ms ease;
   }
 
   /* ── Scrollbar personalizado ───────────────────────────────────────────── */
@@ -58,9 +78,9 @@
     padding: 0;
     position: relative;
     overflow: hidden;
+    transition: background 200ms ease, border-color 200ms ease;
   }
 
-  /* Línea de acento lateral */
   #sidebar::before {
     content: '';
     position: absolute;
@@ -70,7 +90,6 @@
     opacity: 0.6;
   }
 
-  /* Ruido de fondo sutil */
   #sidebar::after {
     content: '';
     position: absolute;
@@ -151,6 +170,10 @@
     border: 1px solid rgba(195, 0, 255, 0.12);
   }
 
+  [data-theme="light"] .nav-btn.active {
+    border: 1px solid rgba(144, 0, 204, 0.15);
+  }
+
   .nav-btn.active .nav-icon { color: var(--accent); }
 
   .nav-icon {
@@ -160,7 +183,6 @@
     opacity: 0.8;
   }
 
-  /* Spacer empuja el bloque inferior */
   .sidebar-spacer { flex: 1; }
 
   /* ── Bloque asistente en sidebar ───────────────────────────────────────── */
@@ -170,6 +192,7 @@
     border-radius: var(--radius);
     background: var(--bg3);
     overflow: hidden;
+    transition: background 200ms ease, border-color 200ms ease;
   }
 
   .assistant-status {
@@ -246,6 +269,7 @@
     display: flex;
     flex-direction: column;
     background: var(--bg);
+    transition: background 200ms ease;
   }
 
   /* ── Panels ────────────────────────────────────────────────────────────── */
@@ -323,7 +347,6 @@
     flex: 1;
     overflow-y: auto;
     padding: 12px 32px 24px;
-    /* GPU acceleration — esta es la clave del scroll fluido */
     will-change: transform;
     -webkit-overflow-scrolling: touch;
     contain: strict;
@@ -341,7 +364,6 @@
     background: var(--bg2);
     transition: border-color var(--transition), background var(--transition);
     overflow: hidden;
-    /* Optimización: cada card es su propio stacking context */
     contain: layout style;
   }
 
@@ -431,7 +453,7 @@
     background: var(--bg2);
     overflow: hidden;
     contain: layout style;
-    transition: border-color var(--transition);
+    transition: border-color var(--transition), background var(--transition);
   }
 
   .edit-card:focus-within {
@@ -509,6 +531,7 @@
     border-radius: var(--radius);
     background: var(--bg2);
     overflow: hidden;
+    transition: background 200ms ease, border-color 200ms ease;
   }
 
   .config-row {
@@ -583,6 +606,10 @@
     cursor: pointer;
     transition: background var(--transition), box-shadow var(--transition);
     letter-spacing: 0.04em;
+  }
+
+  [data-theme="light"] .btn-save {
+    border: 1px solid rgba(144, 0, 204, 0.2);
   }
 
   .btn-save:hover {
@@ -667,6 +694,7 @@
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 14px 16px;
+    transition: background 200ms ease, border-color 200ms ease;
   }
 
   .about-cell span {
@@ -714,7 +742,7 @@
     padding: 6px 12px;
     cursor: pointer;
     outline: none;
-    transition: border-color var(--transition);
+    transition: border-color var(--transition), background 200ms ease, color 200ms ease;
   }
 
   .edit-day-select:focus { border-color: var(--accent); }

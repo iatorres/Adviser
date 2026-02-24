@@ -2,6 +2,7 @@ import time
 import sys
 import os
 import json
+import queue
 import threading
 import webview
 
@@ -60,26 +61,40 @@ def _toast(titulo, mensaje, loop=True):
         pass
 
 
+# ─── Cola para el hilo principal ─────────────────────────────────────────────
+# PROBLEMA RAÍZ: webview.create_window() y window.destroy() SOLO pueden
+# llamarse desde el hilo principal de pywebview. Usar un threading.Thread
+# para crearlos falla silenciosamente.
+# SOLUCIÓN: una cola que el loop principal drena cada 200ms.
+_main_queue = queue.Queue()
+
+def _drain_queue():
+    while True:
+        try:
+            fn = _main_queue.get_nowait()
+            fn()
+        except queue.Empty:
+            break
+        except Exception as e:
+            print(f"[Adviser queue] Error: {e}")
+
+
 # ─── API ──────────────────────────────────────────────────────────────────────
 class AdviserAPI:
     def __init__(self):
         self.bd           = cargar_json(RUTA_JSON, {})
         self.config       = cargar_json(RUTA_CONFIG, {"tema": "dark"})
         self.running_flag = [False]
-        self.hilo         = None
-        self._window      = None       # ventana principal
+        self._window      = None
 
-        # Estado cronómetro
         self._crono = {
             "activo":         False,
-            "tareas":         [],      # [{"texto": str, "done": bool}]
+            "tareas":         [],
             "segs_restantes": 0,
             "segs_total":     0,
         }
-
-        # Overlay
-        self._overlay_win   = None     # ventana pywebview del overlay
-        self._overlay_open  = False    # True si la ventana está creada y visible
+        self._overlay_win  = None
+        self._overlay_open = False
 
     # ═════════════════════════════════════════════════════════════════════════
     #  RUTINA
@@ -123,7 +138,7 @@ class AdviserAPI:
         return {"ok": True}
 
     # ═════════════════════════════════════════════════════════════════════════
-    #  ASISTENTE DE RUTINA
+    #  ASISTENTE
     # ═════════════════════════════════════════════════════════════════════════
     def toggle_asistente(self):
         if self.running_flag[0]:
@@ -156,7 +171,7 @@ class AdviserAPI:
                 time.sleep(1)
 
     # ═════════════════════════════════════════════════════════════════════════
-    #  CRONÓMETRO — llamado desde ui.html
+    #  CRONÓMETRO
     # ═════════════════════════════════════════════════════════════════════════
     def crono_iniciar(self, tareas_json, segs_total):
         tareas = json.loads(tareas_json) if isinstance(tareas_json, str) else list(tareas_json)
@@ -177,19 +192,18 @@ class AdviserAPI:
 
     def crono_finalizar(self):
         self._crono["activo"] = False
-        self._cerrar_overlay()
+        _main_queue.put(self._destruir_overlay)
         return {"ok": True}
 
     def crono_cancelar(self):
         self._crono["activo"] = False
-        self._cerrar_overlay()
+        _main_queue.put(self._destruir_overlay)
         return {"ok": True}
 
     def notificar_alarma_crono(self, titulo, mensaje):
         _toast(titulo, mensaje, loop=False)
         return {"ok": True}
 
-    # ── Hilo de tick ──────────────────────────────────────────────────────────
     def _loop_crono(self):
         while self._crono["activo"] and self._crono["segs_restantes"] > 0:
             time.sleep(1)
@@ -197,7 +211,6 @@ class AdviserAPI:
                 return
             self._crono["segs_restantes"] -= 1
 
-            # Tick → ventana principal
             if self._window:
                 try:
                     segs = self._crono["segs_restantes"]
@@ -207,10 +220,8 @@ class AdviserAPI:
                 except Exception:
                     pass
 
-            # Tick → overlay (si está abierto)
             self._push_overlay()
 
-        # Tiempo agotado
         if self._crono["activo"] and self._crono["segs_restantes"] <= 0:
             self._crono["activo"] = False
             todas = all(t.get("done", False) for t in self._crono["tareas"])
@@ -223,14 +234,14 @@ class AdviserAPI:
                         )
                     except Exception:
                         pass
-            self._cerrar_overlay()
+            _main_queue.put(self._destruir_overlay)
 
     # ═════════════════════════════════════════════════════════════════════════
-    #  OVERLAY — llamado desde overlay.html
+    #  OVERLAY API (llamada desde overlay.html)
     # ═════════════════════════════════════════════════════════════════════════
     def overlay_get_estado(self):
-        tareas  = self._crono["tareas"]
-        hechas  = sum(1 for t in tareas if t.get("done", False))
+        tareas = self._crono["tareas"]
+        hechas = sum(1 for t in tareas if t.get("done", False))
         return {
             "segs_restantes": self._crono["segs_restantes"],
             "segs_total":     self._crono["segs_total"],
@@ -240,80 +251,105 @@ class AdviserAPI:
         }
 
     def overlay_restaurar_app(self):
-        """El usuario pulsó "Volver a Adviser" en el overlay."""
         if self._window:
             try:
                 self._window.restore()
             except Exception:
                 pass
-        # El evento on_restored se encargará de ocultar el overlay
+        return {"ok": True}
+
+    def overlay_cerrar(self):
+        """El usuario cerró el overlay manualmente desde el botón ✕."""
+        _main_queue.put(self._destruir_overlay)
+        return {"ok": True}
+
+    def overlay_set_height(self, height):
+        """Redimensiona la ventana overlay al colapsar/expandir."""
+        ov = self._overlay_win
+        if ov is None:
+            return {"ok": False}
+        def _resize():
+            try:
+                ov.resize(300, int(height))
+            except Exception as e:
+                print(f"[Adviser] Error resize overlay: {e}")
+        _main_queue.put(_resize)
         return {"ok": True}
 
     # ═════════════════════════════════════════════════════════════════════════
-    #  EVENTOS DE VENTANA PRINCIPAL → controlan visibilidad del overlay
+    #  EVENTOS DE VENTANA PRINCIPAL
     # ═════════════════════════════════════════════════════════════════════════
     def on_main_minimized(self):
-        """Llamado por el evento minimized de pywebview."""
+        """Evento pywebview: ventana principal minimizada."""
         if self._crono["activo"]:
-            self._mostrar_overlay()
+            _main_queue.put(self._crear_overlay)
 
     def on_main_restored(self):
-        """Llamado por el evento restored de pywebview."""
-        self._cerrar_overlay()
+        """Evento pywebview: ventana principal restaurada."""
+        _main_queue.put(self._destruir_overlay)
 
     # ═════════════════════════════════════════════════════════════════════════
-    #  HELPERS INTERNOS DEL OVERLAY
+    #  HELPERS QUE DEBEN CORRER EN EL HILO PRINCIPAL
     # ═════════════════════════════════════════════════════════════════════════
-    def _mostrar_overlay(self):
-        """Crea la ventana overlay si no existe."""
+    def _crear_overlay(self):
+        """Crea la ventana overlay. SOLO llamar desde el hilo principal."""
         if self._overlay_open:
             return
+        try:
+            ov = webview.create_window(
+                title            = "Adviser Overlay",
+                url              = RUTA_OVERLAY,
+                js_api           = self,
+                width            = 300,
+                height           = 380,
+                resizable        = False,
+                frameless        = True,
+                on_top           = True,
+                background_color = "#080A0F",
+                shadow           = True,
+            )
+            self._overlay_win  = ov
+            self._overlay_open = True
+            print("[Adviser] Overlay abierto.")
+        except Exception as e:
+            print(f"[Adviser] Error al crear overlay: {e}")
 
-        def _crear():
-            try:
-                ov_win = webview.create_window(
-                    title            = "Adviser Overlay",
-                    url              = RUTA_OVERLAY,
-                    js_api           = self,
-                    width            = 300,
-                    height           = 380,
-                    resizable        = False,
-                    frameless        = True,
-                    on_top           = True,
-                    background_color = "#00000000",
-                    shadow           = True,
-                )
-                self._overlay_win  = ov_win
-                self._overlay_open = True
-            except Exception as e:
-                print(f"[Adviser] Error overlay: {e}")
-
-        threading.Thread(target=_crear, daemon=True).start()
-
-    def _cerrar_overlay(self):
+    def _destruir_overlay(self):
+        """Destruye la ventana overlay. SOLO llamar desde el hilo principal."""
         if self._overlay_win is not None:
             try:
                 self._overlay_win.destroy()
-            except Exception:
-                pass
+                print("[Adviser] Overlay cerrado.")
+            except Exception as e:
+                print(f"[Adviser] Error al cerrar overlay: {e}")
         self._overlay_win  = None
         self._overlay_open = False
 
     def _push_overlay(self):
-        """Envía estado numérico al overlay (sin serializar tareas completas)."""
+        """Envía tick al overlay. Puede llamarse desde cualquier hilo."""
         ov = self._overlay_win
         if ov is None:
             return
         try:
             segs   = self._crono["segs_restantes"]
-            tareas = self._crono["tareas"]
-            hechas = sum(1 for t in tareas if t.get("done", False))
-            total  = len(tareas)
+            hechas = sum(1 for t in self._crono["tareas"] if t.get("done", False))
+            total  = len(self._crono["tareas"])
             ov.evaluate_js(
                 f"window._ovTick && window._ovTick({segs}, {hechas}, {total})"
             )
         except Exception:
             pass
+
+
+# ─── Loop del hilo principal (drena la cola) ──────────────────────────────────
+def _main_loop(api):
+    """
+    Se pasa como `func` a webview.start(). Corre en el hilo principal de pywebview,
+    lo que hace seguro llamar create_window() y destroy() desde aquí.
+    """
+    while True:
+        time.sleep(0.2)
+        _drain_queue()
 
 
 # ─── Entry point ──────────────────────────────────────────────────────────────
@@ -332,8 +368,8 @@ if __name__ == "__main__":
     )
     api._window = window
 
-    # ── Eventos de minimizar/restaurar → controlan el overlay ──
     window.events.minimized += api.on_main_minimized
     window.events.restored  += api.on_main_restored
 
-    webview.start(debug=False)
+    # func= corre en el hilo principal → puede crear/destruir ventanas de forma segura
+    webview.start(_main_loop, api, debug=False)

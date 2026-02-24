@@ -49,7 +49,7 @@
   }
 
   html, body {
-    width: 280px;
+    width: 300px;
     background: transparent;
     overflow: hidden;
     font-family: var(--sans);
@@ -57,9 +57,9 @@
     user-select: none;
   }
 
-  /* ── Contenedor principal ─────────────────────────────────────────────── */
+  /* ── Widget ───────────────────────────────────────────────────────────── */
   #widget {
-    width: 280px;
+    width: 300px;
     background: var(--bg2);
     border: 1px solid var(--border2);
     border-radius: 18px;
@@ -81,24 +81,28 @@
     z-index: 2;
   }
 
-  /* ── Header (zona de arrastre) ────────────────────────────────────────── */
+  /* ── Header (siempre visible, zona de arrastre) ───────────────────────── */
   #widget-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 11px 14px 10px;
+    padding: 10px 12px 10px 14px;
     background: var(--bg);
-    border-bottom: 1px solid var(--border);
     cursor: grab;
     -webkit-app-region: drag;
   }
 
   #widget-header:active { cursor: grabbing; }
 
+  /* Cuando está expandido, separar header del body con borde */
+
   .wh-left {
     display: flex;
     align-items: center;
-    gap: 7px;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
   }
 
   .wh-dot {
@@ -115,6 +119,15 @@
     50%       { box-shadow: 0 0 10px var(--accent), 0 0 18px var(--accent-glow2); }
   }
 
+  /* Contenido del header izquierdo — alterna entre label y tiempo compacto */
+  .wh-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow: hidden;
+    flex: 1;
+  }
+
   .wh-label {
     font-family: var(--mono);
     font-size: 9px;
@@ -122,17 +135,52 @@
     color: var(--text3);
     letter-spacing: 0.13em;
     text-transform: uppercase;
+    white-space: nowrap;
   }
 
-  .wh-drag-hint {
+  /* Tiempo compacto: solo visible en modo pill */
+  .wh-compact-time {
     font-family: var(--mono);
-    font-size: 9px;
-    color: var(--text3);
-    letter-spacing: 0.06em;
-    opacity: 0.5;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text1);
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    display: none;
   }
 
-  /* ── Cuerpo ───────────────────────────────────────────────────────────── */
+  /* En modo pill mostramos el tiempo y ocultamos el label */
+
+  /* Botones de control */
+  .wh-actions {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    -webkit-app-region: no-drag;
+  }
+
+  .wh-btn {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 1px solid var(--border2);
+    background: var(--bg3);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 11px;
+    line-height: 1;
+    transition: background 120ms, border-color 120ms, color 120ms;
+    flex-shrink: 0;
+    color: var(--text2);
+  }
+
+
+  .wh-btn-close:hover {
+    background: var(--red-glow);
+    border-color: var(--red);
+    color: var(--red);
+  }
+
   #widget-body {
     padding: 20px 20px 16px;
     display: flex;
@@ -141,16 +189,14 @@
     gap: 16px;
   }
 
-  /* ── Anillo grande ────────────────────────────────────────────────────── */
+  /* ── Anillo ───────────────────────────────────────────────────────────── */
   .ring-wrap {
     position: relative;
-    width: 140px;
-    height: 140px;
+    width: 140px; height: 140px;
   }
 
   .ring-svg {
-    width: 140px;
-    height: 140px;
+    width: 140px; height: 140px;
     transform: rotate(-90deg);
   }
 
@@ -165,30 +211,20 @@
     stroke: var(--green);
     stroke-width: 7;
     stroke-linecap: round;
-    /* 2π × 60 = 376.99 */
     stroke-dasharray: 376.99;
     stroke-dashoffset: 0;
     transition: stroke-dashoffset 1s linear, stroke 0.5s ease;
     filter: drop-shadow(0 0 6px var(--green));
   }
 
-  .ring-fill.warning {
-    stroke: var(--orange);
-    filter: drop-shadow(0 0 6px var(--orange));
-  }
-
-  .ring-fill.danger {
-    stroke: var(--red);
-    filter: drop-shadow(0 0 8px var(--red));
-    animation: danger-pulse 1s infinite;
-  }
+  .ring-fill.warning { stroke: var(--orange); filter: drop-shadow(0 0 6px var(--orange)); }
+  .ring-fill.danger  { stroke: var(--red); filter: drop-shadow(0 0 8px var(--red)); animation: danger-pulse 1s infinite; }
 
   @keyframes danger-pulse {
     0%, 100% { opacity: 1; }
     50%       { opacity: 0.4; }
   }
 
-  /* Contenido central del anillo */
   .ring-center {
     position: absolute;
     inset: 0;
@@ -216,7 +252,7 @@
     text-transform: uppercase;
   }
 
-  /* ── Tareas pendientes ────────────────────────────────────────────────── */
+  /* ── Tareas ───────────────────────────────────────────────────────────── */
   .tasks-block {
     width: 100%;
     background: var(--bg3);
@@ -241,6 +277,7 @@
     font-weight: 700;
     color: var(--text1);
     line-height: 1;
+    transition: color 300ms, text-shadow 300ms;
   }
 
   .tasks-count-num.all-done {
@@ -258,8 +295,7 @@
   }
 
   .tasks-divider {
-    width: 1px;
-    height: 36px;
+    width: 1px; height: 36px;
     background: var(--border2);
     flex-shrink: 0;
   }
@@ -277,12 +313,8 @@
     line-height: 1.4;
   }
 
-  .tasks-info-text strong {
-    color: var(--text1);
-    font-weight: 600;
-  }
+  .tasks-info-text strong { color: var(--text1); font-weight: 600; }
 
-  /* Mini barra de progreso */
   .tasks-prog-wrap {
     height: 3px;
     background: var(--border2);
@@ -294,11 +326,10 @@
     height: 100%;
     background: var(--green);
     border-radius: 99px;
-    transition: width 300ms ease, background 0.5s ease;
-    box-shadow: 0 0 5px var(--green-dim);
+    transition: width 300ms ease;
   }
 
-  /* ── Footer con botón restaurar ───────────────────────────────────────── */
+  /* ── Footer ───────────────────────────────────────────────────────────── */
   #widget-footer {
     padding: 0 16px 16px;
   }
@@ -326,19 +357,22 @@
 
 <div id="widget">
 
-  <!-- Header / zona de arrastre -->
+  <!-- Header — siempre visible, zona de arrastre -->
   <div id="widget-header">
     <div class="wh-left">
       <div class="wh-dot"></div>
-      <span class="wh-label">Adviser · En curso</span>
+      <div class="wh-info">
+        <span class="wh-label">Adviser · En curso</span>
+        <span class="wh-compact-time" id="wh-compact-time">--:--</span>
+      </div>
     </div>
-    <span class="wh-drag-hint">⠿ arrastrar</span>
+    <div class="wh-actions">
+      <button class="wh-btn wh-btn-close"    onclick="cerrarOverlay()"               title="Cerrar">✕</button>
+    </div>
   </div>
 
-  <!-- Cuerpo -->
+  <!-- Cuerpo — se oculta al colapsar -->
   <div id="widget-body">
-
-    <!-- Anillo de tiempo -->
     <div class="ring-wrap">
       <svg class="ring-svg" viewBox="0 0 140 140">
         <circle class="ring-bg"   cx="70" cy="70" r="60"/>
@@ -350,7 +384,6 @@
       </div>
     </div>
 
-    <!-- Bloque de tareas -->
     <div class="tasks-block">
       <div class="tasks-count-col">
         <div class="tasks-count-num" id="ov-pendientes">-</div>
@@ -364,10 +397,8 @@
         </div>
       </div>
     </div>
-
   </div>
 
-  <!-- Footer -->
   <div id="widget-footer">
     <button class="btn-restaurar" onclick="restaurarApp()">↗ Volver a Adviser</button>
   </div>
@@ -382,6 +413,10 @@
     total:         0,
   };
 
+  // Altura del widget en cada modo (medida en tiempo de ejecución)
+  const H_EXPANDED = 380;   // aprox — se ajusta al medir el DOM
+  const H_PILL     = 44;    // solo el header
+
   // ── Init ──────────────────────────────────────────────────────────────────
   window.addEventListener('pywebviewready', async () => {
     const estado = await window.pywebview.api.overlay_get_estado();
@@ -390,15 +425,15 @@
     ov.hechas        = estado.hechas;
     ov.total         = estado.total;
 
-    // Aplicar tema
     if (estado.tema === 'light') {
       document.documentElement.setAttribute('data-theme', 'light');
     }
 
+    // Empezar expandido
     renderOverlay();
   });
 
-  // ── Tick desde Python (cada segundo) ──────────────────────────────────────
+  // ── Tick desde Python ─────────────────────────────────────────────────────
   window._ovTick = function(segsRestantes, hechas, total) {
     ov.segsRestantes = segsRestantes;
     ov.hechas        = hechas;
@@ -408,39 +443,39 @@
 
   // ── Render ────────────────────────────────────────────────────────────────
   function renderOverlay() {
-    // Tiempo
     const mm = String(Math.floor(ov.segsRestantes / 60)).padStart(2, '0');
     const ss = String(ov.segsRestantes % 60).padStart(2, '0');
-    document.getElementById('ov-time').textContent = `${mm}:${ss}`;
+    const ts = `${mm}:${ss}`;
 
-    // Anillo
+    document.getElementById('ov-time').textContent         = ts;
+    document.getElementById('wh-compact-time').textContent = ts;
+
     const CIRC    = 376.99;
     const progres = ov.segsTotal > 0 ? ov.segsRestantes / ov.segsTotal : 0;
-    const offset  = CIRC * (1 - progres);
     const ring    = document.getElementById('ov-ring');
-    ring.style.strokeDashoffset = offset;
+    ring.style.strokeDashoffset = CIRC * (1 - progres);
     ring.classList.remove('warning', 'danger');
     if (progres <= 0.15)      ring.classList.add('danger');
     else if (progres <= 0.35) ring.classList.add('warning');
 
-    // Tareas
     const pendientes = ov.total - ov.hechas;
     const numEl      = document.getElementById('ov-pendientes');
     numEl.textContent = pendientes;
     numEl.classList.toggle('all-done', pendientes === 0);
 
-    const pct = ov.total > 0 ? (ov.hechas / ov.total * 100) : 0;
-    document.getElementById('ov-prog').style.width = pct + '%';
+    document.getElementById('ov-prog').style.width =
+      ov.total > 0 ? (ov.hechas / ov.total * 100) + '%' : '0%';
 
-    const textoEl = document.getElementById('ov-tasks-text');
-    if (pendientes === 0) {
-      textoEl.innerHTML = '<strong>¡Todo listo!</strong><br>Podés finalizar la sesión.';
-    } else {
-      textoEl.innerHTML = `<strong>${ov.hechas}</strong> de <strong>${ov.total}</strong> completadas`;
-    }
+    document.getElementById('ov-tasks-text').innerHTML = pendientes === 0
+      ? '<strong>¡Todo listo!</strong><br>Podés finalizar.'
+      : `<strong>${ov.hechas}</strong> de <strong>${ov.total}</strong> completadas`;
   }
 
-  // ── Restaurar ventana principal ───────────────────────────────────────────
+  // ── Cerrar / restaurar ────────────────────────────────────────────────────
+  function cerrarOverlay() {
+    if (window.pywebview) window.pywebview.api.overlay_cerrar();
+  }
+
   function restaurarApp() {
     if (window.pywebview) window.pywebview.api.overlay_restaurar_app();
   }

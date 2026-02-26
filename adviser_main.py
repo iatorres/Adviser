@@ -6,6 +6,51 @@ import queue
 import threading
 import webview
 
+# win32gui es parte de pywin32. Si no está, usamos ctypes como fallback
+# (ctypes siempre está disponible en Windows sin instalar nada extra).
+try:
+    import win32gui
+    import win32con
+    _WIN32_AVAILABLE = True
+except ImportError:
+    _WIN32_AVAILABLE = False
+
+# Fallback via ctypes — funciona sin pywin32
+import ctypes
+import ctypes.wintypes
+_SW_SHOWMINIMIZED = 2
+
+def _hwnd_por_titulo(titulo):
+    """Busca un HWND por título de ventana usando ctypes puro."""
+    result = ctypes.c_ulong(0)
+    FindWindowW = ctypes.windll.user32.FindWindowW
+    FindWindowW.restype = ctypes.wintypes.HWND
+    hwnd = FindWindowW(None, titulo)
+    return hwnd
+
+def _esta_minimizada_ctypes(titulo):
+    """Detecta si una ventana está minimizada usando ctypes (sin pywin32)."""
+    try:
+        hwnd = _hwnd_por_titulo(titulo)
+        if not hwnd:
+            return False
+        # GetWindowPlacement via ctypes
+        class WINDOWPLACEMENT(ctypes.Structure):
+            _fields_ = [
+                ("length",           ctypes.c_uint),
+                ("flags",            ctypes.c_uint),
+                ("showCmd",          ctypes.c_uint),
+                ("ptMinPosition",    ctypes.wintypes.POINT),
+                ("ptMaxPosition",    ctypes.wintypes.POINT),
+                ("rcNormalPosition", ctypes.wintypes.RECT),
+            ]
+        wp = WINDOWPLACEMENT()
+        wp.length = ctypes.sizeof(wp)
+        ctypes.windll.user32.GetWindowPlacement(hwnd, ctypes.byref(wp))
+        return wp.showCmd == _SW_SHOWMINIMIZED
+    except Exception:
+        return False
+
 from winotify import Notification, audio
 from datetime import datetime
 
@@ -23,6 +68,7 @@ RUTA_ICON    = os.path.join(_app_path, "icon.png")
 RUTA_CONFIG  = os.path.join(_app_path, "config.json")
 RUTA_HTML    = os.path.join(_app_path, "ui.html")
 RUTA_OVERLAY = os.path.join(_app_path, "overlay.html")
+RUTA_RUTINA_OVERLAY = os.path.join(_app_path, "rutina_overlay.html")
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -96,6 +142,12 @@ class AdviserAPI:
         self._overlay_win  = None
         self._overlay_open = False
 
+        # Overlay de rutina (recordatorio de tarea actual)
+        self._window_minimized    = False   # True cuando está minimizada
+        self._window_closing      = False   # True cuando se está cerrando (no abrir overlay)
+        self._rutina_overlay_win   = None
+        self._rutina_overlay_datos = {"hora_str": "--:00", "titulo": "", "mensaje": ""}
+
     # ═════════════════════════════════════════════════════════════════════════
     #  RUTINA
     # ═════════════════════════════════════════════════════════════════════════
@@ -155,8 +207,17 @@ class AdviserAPI:
             hora    = ahora.hour
             minuto  = ahora.minute
             segundo = ahora.second
+
+            titulo  = "(Vacío)"
+            mensaje = "Sin actividad asignada"
             if dia in self.bd and hora < len(self.bd[dia]):
-                _toast(self.bd[dia][hora][0], self.bd[dia][hora][1])
+                titulo  = self.bd[dia][hora][0]
+                mensaje = self.bd[dia][hora][1]
+
+            # 1. Mostrar notificación de Windows
+            _toast(titulo, mensaje)
+
+            # 2. Notificar a la ventana principal (resalta hora actual)
             if self._window:
                 try:
                     self._window.evaluate_js(
@@ -164,11 +225,32 @@ class AdviserAPI:
                     )
                 except Exception:
                     pass
+
+            # 3. Guardar datos de la tarea actual para el overlay
+            hora_str = f"{str(hora).zfill(2)}:00"
+            self._rutina_overlay_datos = {
+                "hora_str": hora_str,
+                "titulo":   titulo,
+                "mensaje":  mensaje,
+            }
+
+            # 4. Esperar 4s y abrir el overlay SOLO si la app está minimizada
+            def _abrir_si_minimizada():
+                if self._window_minimized:
+                    _main_queue.put(self._crear_rutina_overlay)
+
+            t = threading.Timer(4.0, _abrir_si_minimizada)
+            t.daemon = True
+            t.start()
+
             espera = 3600 - (minuto * 60 + segundo)
             for _ in range(espera + 2):
                 if not self.running_flag[0]:
                     break
                 time.sleep(1)
+
+            # 5. Al cumplirse la hora → cerrar el overlay (ya llega uno nuevo)
+            _main_queue.put(self._destruir_rutina_overlay)
 
     # ═════════════════════════════════════════════════════════════════════════
     #  CRONÓMETRO
@@ -277,16 +359,157 @@ class AdviserAPI:
         return {"ok": True}
 
     # ═════════════════════════════════════════════════════════════════════════
-    #  EVENTOS DE VENTANA PRINCIPAL
+    #  OVERLAY DE RUTINA — llamado desde rutina_overlay.html
     # ═════════════════════════════════════════════════════════════════════════
+    def rutina_overlay_get_datos(self):
+        """El overlay de rutina solicita sus datos al abrirse."""
+        return {
+            **self._rutina_overlay_datos,
+            "tema": self.config.get("tema", "dark"),
+        }
+
+    def rutina_overlay_cerrar(self):
+        """El usuario cerró el overlay de rutina."""
+        _main_queue.put(self._destruir_rutina_overlay)
+        return {"ok": True}
+
+    def rutina_overlay_abrir_app(self):
+        """El usuario pulsó 'Abrir Adviser' en el overlay de rutina."""
+        if self._window:
+            try:
+                self._window.restore()
+            except Exception:
+                pass
+        _main_queue.put(self._destruir_rutina_overlay)
+        return {"ok": True}
+
+    def _crear_rutina_overlay(self):
+        """Crea la ventana del overlay de rutina. SOLO desde el hilo principal."""
+        # Si ya hay uno abierto, destruirlo primero (nueva hora, nuevo overlay)
+        if self._rutina_overlay_win is not None:
+            try:
+                self._rutina_overlay_win.destroy()
+            except Exception:
+                pass
+            self._rutina_overlay_win = None
+
+        try:
+            ov = webview.create_window(
+                title            = "Adviser Rutina",
+                url              = RUTA_RUTINA_OVERLAY,
+                js_api           = self,
+                width            = 320,
+                height           = 110,
+                resizable        = False,
+                frameless        = True,
+                on_top           = True,
+                background_color = "#080A0F",
+                shadow           = True,
+            )
+            self._rutina_overlay_win = ov
+            print(f"[Adviser] Overlay rutina abierto: {self._rutina_overlay_datos['hora_str']}")
+        except Exception as e:
+            print(f"[Adviser] Error al crear overlay rutina: {e}")
+
+    def _destruir_rutina_overlay(self):
+        """Destruye el overlay de rutina. SOLO desde el hilo principal."""
+        if self._rutina_overlay_win is not None:
+            try:
+                self._rutina_overlay_win.destroy()
+            except Exception:
+                pass
+            self._rutina_overlay_win = None
+            print("[Adviser] Overlay rutina cerrado.")
+
+    # ═════════════════════════════════════════════════════════════════════════
+    #  DETECCIÓN DE ESTADO DE VENTANA (polling via win32gui)
+    # ═════════════════════════════════════════════════════════════════════════
+    def iniciar_monitor_ventana(self):
+        """Lanza un hilo que detecta minimizar/restaurar via win32gui."""
+        t = threading.Thread(target=self._poll_ventana, daemon=True)
+        t.start()
+
+    def _poll_ventana(self):
+        """Polling cada 500ms del estado real de la ventana via win32gui."""
+        prev_minimized = False
+        print("[Adviser] Monitor de ventana iniciado.")
+
+        while not self._window_closing:
+            time.sleep(0.5)
+            try:
+                is_min = self._es_ventana_minimizada()
+            except Exception as e:
+                print(f"[Adviser] Error en poll: {e}")
+                continue
+
+            if is_min == prev_minimized:
+                continue
+
+            prev_minimized = is_min
+            print(f"[Adviser] Estado ventana → {'MINIMIZADA' if is_min else 'RESTAURADA'}")
+
+            if is_min:
+                self._window_minimized = True
+                # Overlay cronómetro
+                if self._crono["activo"]:
+                    _main_queue.put(self._crear_overlay)
+                # Overlay rutina — cargar tarea actual al momento de minimizar
+                if self.running_flag[0]:
+                    self._actualizar_datos_rutina_ahora()
+                    _main_queue.put(self._crear_rutina_overlay)
+            else:
+                self._window_minimized = False
+                _main_queue.put(self._destruir_overlay)
+                _main_queue.put(self._destruir_rutina_overlay)
+
+    def _actualizar_datos_rutina_ahora(self):
+        """Carga la tarea de la hora actual en _rutina_overlay_datos."""
+        ahora   = datetime.now()
+        dia     = DIAS[ahora.weekday()]
+        hora    = ahora.hour
+        hora_str = f"{str(hora).zfill(2)}:00"
+        titulo  = "(Vacío)"
+        mensaje = "Sin actividad asignada"
+        if dia in self.bd and hora < len(self.bd[dia]):
+            entrada = self.bd[dia][hora]
+            if entrada and len(entrada) >= 2:
+                titulo  = entrada[0] or "(Vacío)"
+                mensaje = entrada[1] or "Sin actividad asignada"
+        self._rutina_overlay_datos = {
+            "hora_str": hora_str,
+            "titulo":   titulo,
+            "mensaje":  mensaje,
+        }
+        print(f"[Adviser] Datos rutina: {hora_str} — {titulo}")
+
+    def _es_ventana_minimizada(self):
+        """Devuelve True si la ventana principal está minimizada.
+        Usa win32gui si está disponible, si no cae a ctypes puro.
+        """
+        if self._window is None:
+            return False
+        if _WIN32_AVAILABLE:
+            try:
+                hwnd = win32gui.FindWindow(None, "Adviser")
+                if not hwnd:
+                    return False
+                placement = win32gui.GetWindowPlacement(hwnd)
+                return placement[1] == win32con.SW_SHOWMINIMIZED
+            except Exception:
+                pass
+        # Fallback ctypes (siempre disponible en Windows)
+        return _esta_minimizada_ctypes("Adviser")
+
+    # Mantener estos handlers para compatibilidad (pywebview los llama igual)
     def on_main_minimized(self):
-        """Evento pywebview: ventana principal minimizada."""
-        if self._crono["activo"]:
-            _main_queue.put(self._crear_overlay)
+        pass  # reemplazado por polling
+
+    def on_main_closed(self):
+        self._window_closing   = True
+        self._window_minimized = False
 
     def on_main_restored(self):
-        """Evento pywebview: ventana principal restaurada."""
-        _main_queue.put(self._destruir_overlay)
+        pass  # reemplazado por polling
 
     # ═════════════════════════════════════════════════════════════════════════
     #  HELPERS QUE DEBEN CORRER EN EL HILO PRINCIPAL
@@ -370,6 +593,13 @@ if __name__ == "__main__":
 
     window.events.minimized += api.on_main_minimized
     window.events.restored  += api.on_main_restored
+    window.events.closed    += api.on_main_closed
+
+    # Arrancar monitor de ventana (polling win32gui) una vez que webview esté listo
+    def _on_loaded():
+        api.iniciar_monitor_ventana()
+
+    window.events.loaded += _on_loaded
 
     # func= corre en el hilo principal → puede crear/destruir ventanas de forma segura
     webview.start(_main_loop, api, debug=False)

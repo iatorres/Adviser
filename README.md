@@ -8,8 +8,8 @@ El proyecto nacio, al yo ser un estudiante tendiente a la **procrastinación**, 
 
 ## 🚀 Características
 
-- **Interfaz Gráfica Moderna:** Construida con `customtkinter`, ofrece una experiencia de usuario limpia y fácil de usar.
-- **Notificaciones Nativas:** Se integra perfectamente con el centro de actividades de Windows 10/11 usando `winotify`.
+- **Interfaz Gráfica Moderna:** Construida con tecnologías web (HTML, CSS, JS) y `pywebview`, ofrece una experiencia de usuario limpia y fácil de usar.
+- **Notificaciones Nativas:** Se integra con el centro de actividades de Windows 10/11 usando `winotify`.
 - **Edición en Tiempo Real:** Puedes modificar las actividades de tu rutina directamente desde la aplicación.
 - **Persistencia de Datos:** Tu rutina se guarda automáticamente en un archivo `rutina.json`.
 - **Control Total:** Inicia o detén el asistente con un solo clic.
@@ -24,19 +24,29 @@ Para ejecutar este proyecto, necesitas tener instalado:
 
 ## 🔧 Instalación
 
-1. **Clonar el repositorio** (o descargar los archivos en tu carpeta local):
+1.  **Clonar el repositorio** (o descargar los archivos en tu carpeta local):
    ```bash
    git clone https://github.com/iatorres/adviser.git
    cd adviser
    ```
 
-2. **Instalar dependencias:**
-   El proyecto utiliza `customtkinter` para la interfaz y `winotify` para las alertas.
-   ```bash
-   pip install customtkinter winotify
-   ```
+2.  **Crear y activar un entorno virtual (Recomendado)**:
+    Para mantener las dependencias del proyecto aisladas, es una buena práctica usar un entorno virtual.
+    ```bash
+    # Crear el entorno
+    python -m venv venv
 
-3. **Recursos:**
+    # Activar en Windows
+    .\venv\Scripts\activate
+    ```
+
+3.  **Instalar dependencias:**
+    El proyecto necesita varias librerías para funcionar. Puedes instalarlas todas con el siguiente comando:
+    ```bash
+    pip install "pywebview[winforms]" winotify pywin32
+    ```
+
+4.  **Recursos:**
    Asegúrate de que el archivo `icon.png` se encuentre en el mismo directorio que `adviser_main.py`. Este icono se mostrará en todas las notificaciones.
 
 

@@ -329,6 +329,7 @@ class AdviserAPI:
             "segs_total":     self._crono["segs_total"],
             "hechas":         hechas,
             "total":          len(tareas),
+            "tareas":         tareas,
             "tema":           self.config.get("tema", "dark"),
         }
 
@@ -524,7 +525,7 @@ class AdviserAPI:
                 url              = RUTA_OVERLAY,
                 js_api           = self,
                 width            = 300,
-                height           = 380,
+                height           = 345, # Altura base, se ajusta desde JS
                 resizable        = False,
                 frameless        = True,
                 on_top           = True,
@@ -555,10 +556,12 @@ class AdviserAPI:
             return
         try:
             segs   = self._crono["segs_restantes"]
-            hechas = sum(1 for t in self._crono["tareas"] if t.get("done", False))
-            total  = len(self._crono["tareas"])
+            tareas = self._crono["tareas"]
+            hechas = sum(1 for t in tareas if t.get("done", False))
+            total  = len(tareas)
+            tareas_json = json.dumps(tareas)
             ov.evaluate_js(
-                f"window._ovTick && window._ovTick({segs}, {hechas}, {total})"
+                f"window._ovTick && window._ovTick({segs}, {hechas}, {total}, {tareas_json})"
             )
         except Exception:
             pass

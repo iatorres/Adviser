@@ -1,4 +1,4 @@
-import subprocess, sys, time
+import subprocess, sys, time, os
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
@@ -13,8 +13,9 @@ class Reloader(FileSystemEventHandler):
         self.proceso = subprocess.Popen([sys.executable, "adviser_main.py"])
 
     def on_modified(self, event):
-        if event.src_path.endswith("adviser_main.py"):
-            print("Cambio detectado, reiniciando...")
+        # Reinicia al detectar cambios en el backend o en el frontend
+        if event.src_path.endswith(("adviser_main.py", "ui.html", "script.js")):
+            print(f"Cambio detectado en {os.path.basename(event.src_path)}, reiniciando...")
             self.iniciar()
 
 reloader = Reloader()

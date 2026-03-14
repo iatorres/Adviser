@@ -1,67 +1,688 @@
 {
     "lunes": [
-        ["Arrancamos el dia!!", "Tocan 2 de Gimnasio."],
-        ["Deberias estar entrenando", "Ponele ganas!!"],
-        ["Hora de OCIO", "Distraete un rato."],
-        ["TOCA ESTUDIAR", "Activa con la facultad!!"],
-        ["A seguir estudiando 1horita", "CON GANAS!!"],
-        ["Hora de un buen almuerzo", "A recuperar el gimnasio"],
-        ["Dos hora de trabajo personal", "Hay que enfocarse en los proyectos"],
-        ["Una horita más y a ir a la universidad!", "Focus!!"],
-        ["Momento de emprender viaje!", "Exitos!"],
-        ["Solo una hora", "Recien llegas de la facultad, distraete y a dormir"],
-        ["TOCA IR A DORMIR!!", "Hay que descansar campeon excelente dia!"]
+        [
+            "Arrancamos el dia!!",
+            "Tocan 2 de Gimnasio."
+        ],
+        [
+            "Deberias estar entrenando",
+            "Ponele ganas!!"
+        ],
+        [
+            "Hora de OCIO",
+            "Distraete un rato."
+        ],
+        [
+            "TOCA ESTUDIAR",
+            "Activa con la facultad!!"
+        ],
+        [
+            "A seguir estudiando 1horita",
+            "CON GANAS!!"
+        ],
+        [
+            "Hora de un buen almuerzo",
+            "A recuperar el gimnasio"
+        ],
+        [
+            "Dos hora de trabajo personal",
+            "Hay que enfocarse en los proyectos"
+        ],
+        [
+            "Una horita más y a ir a la universidad!",
+            "Focus!!"
+        ],
+        [
+            "Momento de emprender viaje!",
+            "Exitos!"
+        ],
+        [
+            "Solo una hora",
+            "Recien llegas de la facultad, distraete y a dormir"
+        ],
+        [
+            "TOCA IR A DORMIR!!",
+            "Hay que descansar campeon excelente dia!"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ]
     ],
     "martes": [
-        ["Arrancamos el dia!!", "Tocan 2 de Gimnasio."],
-        ["Deberias estar entrenando", "Ponele ganas!!"],
-        ["Hora de OCIO", "Distraete un rato."],
-        ["TOCA ESTUDIAR", "Activa con la facultad!!"],
-        ["A seguir estudiando 1horita", "CON GANAS!!"],
-        ["Hora de un buen almuerzo", "A recuperar el gimnasio"],
-        ["Dos hora de trabajo personal", "Hay que enfocarse en los proyectos"],
-        ["Una horita más y a ir a la universidad!", "Focus!!"],
-        ["Momento de emprender viaje!", "Exitos!"],
-        ["Solo una hora", "Recien llegas de la facultad, distraete y a dormir"],
-        ["TOCA IR A DORMIR!!", "Hay que descansar campeon excelente dia!"]
+        [
+            "Arrancamos el dia!!",
+            "Tocan 2 de Gimnasio."
+        ],
+        [
+            "Deberias estar entrenando",
+            "Ponele ganas!!"
+        ],
+        [
+            "Hora de OCIO",
+            "Distraete un rato."
+        ],
+        [
+            "TOCA ESTUDIAR",
+            "Activa con la facultad!!"
+        ],
+        [
+            "A seguir estudiando 1horita",
+            "CON GANAS!!"
+        ],
+        [
+            "Hora de un buen almuerzo",
+            "A recuperar el gimnasio"
+        ],
+        [
+            "Dos hora de trabajo personal",
+            "Hay que enfocarse en los proyectos"
+        ],
+        [
+            "Una horita más y a ir a la universidad!",
+            "Focus!!"
+        ],
+        [
+            "Momento de emprender viaje!",
+            "Exitos!"
+        ],
+        [
+            "Solo una hora",
+            "Recien llegas de la facultad, distraete y a dormir"
+        ],
+        [
+            "TOCA IR A DORMIR!!",
+            "Hay que descansar campeon excelente dia!"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ]
     ],
     "miercoles": [
-        ["Arrancamos el dia!!", "Tocan 2 de Gimnasio."],
-        ["Deberias estar entrenando", "Ponele ganas!!"],
-        ["Hora de OCIO", "Distraete un rato."],
-        ["TOCA ESTUDIAR", "Activa con la facultad!!"],
-        ["A seguir estudiando 1horita", "CON GANAS!!"],
-        ["Hora de un buen almuerzo", "A recuperar el gimnasio"],
-        ["Dos hora de trabajo personal", "Hay que enfocarse en los proyectos"],
-        ["Una horita más y a ir a la universidad!", "Focus!!"],
-        ["Momento de emprender viaje!", "Exitos!"],
-        ["Solo una hora", "Recien llegas de la facultad, distraete y a dormir"],
-        ["TOCA IR A DORMIR!!", "Hay que descansar campeon excelente dia!"]
+        [
+            "Arrancamos el dia!!",
+            "Tocan 2 de Gimnasio."
+        ],
+        [
+            "Deberias estar entrenando",
+            "Ponele ganas!!"
+        ],
+        [
+            "Hora de OCIO",
+            "Distraete un rato."
+        ],
+        [
+            "TOCA ESTUDIAR",
+            "Activa con la facultad!!"
+        ],
+        [
+            "A seguir estudiando 1horita",
+            "CON GANAS!!"
+        ],
+        [
+            "Hora de un buen almuerzo",
+            "A recuperar el gimnasio"
+        ],
+        [
+            "Dos hora de trabajo personal",
+            "Hay que enfocarse en los proyectos"
+        ],
+        [
+            "Una horita más y a ir a la universidad!",
+            "Focus!!"
+        ],
+        [
+            "Momento de emprender viaje!",
+            "Exitos!"
+        ],
+        [
+            "Solo una hora",
+            "Recien llegas de la facultad, distraete y a dormir"
+        ],
+        [
+            "TOCA IR A DORMIR!!",
+            "Hay que descansar campeon excelente dia!"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ]
     ],
     "jueves": [
-        ["Arrancamos el dia!!", "Tocan 2 de Gimnasio."],
-        ["Deberias estar entrenando", "Ponele ganas!!"],
-        ["Hora de OCIO", "Distraete un rato."],
-        ["TOCA ESTUDIAR", "Activa con la facultad!!"],
-        ["A seguir estudiando 1horita", "CON GANAS!!"],
-        ["Hora de un buen almuerzo", "A recuperar el gimnasio"],
-        ["Dos hora de trabajo personal", "Hay que enfocarse en los proyectos"],
-        ["Una horita más y a ir a la universidad!", "Focus!!"],
-        ["Momento de emprender viaje!", "Exitos!"],
-        ["Solo una hora", "Recien llegas de la facultad, distraete y a dormir"],
-        ["TOCA IR A DORMIR!!", "Hay que descansar campeon excelente dia!"]
+        [
+            "Arrancamos el dia!!",
+            "Tocan 2 de Gimnasio."
+        ],
+        [
+            "Deberias estar entrenando",
+            "Ponele ganas!!"
+        ],
+        [
+            "Hora de OCIO",
+            "Distraete un rato."
+        ],
+        [
+            "TOCA ESTUDIAR",
+            "Activa con la facultad!!"
+        ],
+        [
+            "A seguir estudiando 1horita",
+            "CON GANAS!!"
+        ],
+        [
+            "Hora de un buen almuerzo",
+            "A recuperar el gimnasio"
+        ],
+        [
+            "Dos hora de trabajo personal",
+            "Hay que enfocarse en los proyectos"
+        ],
+        [
+            "Una horita más y a ir a la universidad!",
+            "Focus!!"
+        ],
+        [
+            "Momento de emprender viaje!",
+            "Exitos!"
+        ],
+        [
+            "Solo una hora",
+            "Recien llegas de la facultad, distraete y a dormir"
+        ],
+        [
+            "TOCA IR A DORMIR!!",
+            "Hay que descansar campeon excelente dia!"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ]
     ],
     "viernes": [
-        ["Arrancamos el dia!!", "Tocan 2 de Gimnasio."],
-        ["Deberias estar entrenando", "Ponele ganas!!"],
-        ["Hora de OCIO", "Distraete un rato."],
-        ["TOCA ESTUDIAR", "Activa con la facultad!!"],
-        ["A seguir estudiando 1horita", "CON GANAS!!"],
-        ["Hora de un buen almuerzo", "A recuperar el gimnasio"],
-        ["Dos hora de trabajo personal", "Hay que enfocarse en los proyectos"],
-        ["Una horita más y a ir a la universidad!", "Focus!!"],
-        ["Momento de emprender viaje!", "Exitos!"],
-        ["Solo una hora", "Recien llegas de la facultad, distraete y a dormir"],
-        ["TOCA IR A DORMIR!!", "Hay que descansar campeon excelente dia!"]
+        [
+            "Arrancamos el dia!!",
+            "Tocan 2 de Gimnasio."
+        ],
+        [
+            "Deberias estar entrenando",
+            "Ponele ganas!!"
+        ],
+        [
+            "Hora de OCIO",
+            "Distraete un rato."
+        ],
+        [
+            "TOCA ESTUDIAR",
+            "Activa con la facultad!!"
+        ],
+        [
+            "A seguir estudiando 1horita",
+            "CON GANAS!!"
+        ],
+        [
+            "Hora de un buen almuerzo",
+            "A recuperar el gimnasio"
+        ],
+        [
+            "Dos hora de trabajo personal",
+            "Hay que enfocarse en los proyectos"
+        ],
+        [
+            "Una horita más y a ir a la universidad!",
+            "Focus!!"
+        ],
+        [
+            "Momento de emprender viaje!",
+            "Exitos!"
+        ],
+        [
+            "Solo una hora",
+            "Recien llegas de la facultad, distraete y a dormir"
+        ],
+        [
+            "TOCA IR A DORMIR!!",
+            "Hay que descansar campeon excelente dia!"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ]
+    ],
+    "sabado": [
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "2 Horitas con Gime",
+            "Mucho amor"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ]
+    ],
+    "domingo": [
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ],
+        [
+            "(Vacío)",
+            "Sin actividad asignada"
+        ]
     ]
 }

@@ -329,6 +329,42 @@
     transition: width 300ms ease;
   }
 
+  /* ── Lista de tareas restantes ────────────────────────────────────────── */
+  .remaining-list {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-right: 4px;
+  }
+
+  .remaining-item {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 11px;
+    color: var(--text2);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    transition: background 120ms;
+  }
+  .remaining-item:hover { background: var(--bg2); border-color: var(--border2); color: var(--text1); }
+
+  .remaining-dot {
+    margin-top: 4px;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    border: 1px solid var(--text3);
+    flex-shrink: 0;
+  }
+  
+  .remaining-text {
+    flex: 1;
+    line-height: 1.3;
+  }
+
   /* ── Footer ───────────────────────────────────────────────────────────── */
   #widget-footer {
     padding: 0 16px 16px;
@@ -397,6 +433,8 @@
         </div>
       </div>
     </div>
+
+    <div class="remaining-list" id="ov-remaining-list"></div>
   </div>
 
   <div id="widget-footer">
@@ -411,11 +449,10 @@
     segsTotal:     0,
     hechas:        0,
     total:         0,
+    tareas:        [],
   };
 
-  // Altura del widget en cada modo (medida en tiempo de ejecución)
-  const H_EXPANDED = 380;   // aprox — se ajusta al medir el DOM
-  const H_PILL     = 44;    // solo el header
+  let currentOverlayHeight = 0;
 
   // ── Init ──────────────────────────────────────────────────────────────────
   window.addEventListener('pywebviewready', async () => {
@@ -424,6 +461,7 @@
     ov.segsTotal     = estado.segs_total;
     ov.hechas        = estado.hechas;
     ov.total         = estado.total;
+    ov.tareas        = estado.tareas || [];
 
     if (estado.tema === 'light') {
       document.documentElement.setAttribute('data-theme', 'light');
@@ -434,10 +472,11 @@
   });
 
   // ── Tick desde Python ─────────────────────────────────────────────────────
-  window._ovTick = function(segsRestantes, hechas, total) {
+  window._ovTick = function(segsRestantes, hechas, total, tareas) {
     ov.segsRestantes = segsRestantes;
     ov.hechas        = hechas;
     ov.total         = total;
+    if (tareas) ov.tareas = tareas;
     renderOverlay();
   };
 
@@ -469,6 +508,26 @@
     document.getElementById('ov-tasks-text').innerHTML = pendientes === 0
       ? '<strong>¡Todo listo!</strong><br>Podés finalizar.'
       : `<strong>${ov.hechas}</strong> de <strong>${ov.total}</strong> completadas`;
+
+    // Render lista restantes
+    const listEl = document.getElementById('ov-remaining-list');
+    const notDone = (ov.tareas || []).filter(t => !t.done);
+
+    if (pendientes === 0 || notDone.length === 0) {
+      listEl.style.display = 'none';
+    } else {
+      listEl.style.display = 'flex';
+      listEl.innerHTML = notDone.map(t => `
+        <div class="remaining-item">
+          <div class="remaining-dot"></div>
+          <div class="remaining-text">${escapeHtml(t.texto)}</div>
+        </div>
+      `).join('');
+    }
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
   // ── Cerrar / restaurar ────────────────────────────────────────────────────

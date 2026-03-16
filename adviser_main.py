@@ -353,10 +353,41 @@ class AdviserAPI:
             return {"ok": False}
         def _resize():
             try:
-                ov.resize(300, int(height))
+                ov.resize(200, int(height))
             except Exception as e:
                 print(f"[Adviser] Error resize overlay: {e}")
         _main_queue.put(_resize)
+        return {"ok": True}
+    
+    
+    def overlay_resize(self, width, height):
+        """Redimensiona el overlay por arrastre del handle. Llamado desde overlay.html."""
+        ov = self._overlay_win
+        if ov is None:
+            return {"ok": False}
+        w = max(240, int(width))
+        h = max(100, int(height))
+        def _resize():
+            try:
+                ov.resize(w, h)
+            except Exception as e:
+                print(f"[Adviser] Error resize overlay: {e}")
+        _main_queue.put(_resize)
+        return {"ok": True}
+    
+    def overlay_push_tareas(self, tareas_json):
+        """Empuja la lista de tareas actualizada al overlay. Llamado desde script.js."""
+        ov = self._overlay_win
+        if ov is None:
+            return {"ok": False}
+        try:
+            # Escapar para evaluate_js
+            escaped = tareas_json.replace('\\', '\\\\').replace('`', '\\`')
+            ov.evaluate_js(
+                f"window._ovNuevaTarea && window._ovNuevaTarea(`{escaped}`)"
+            )
+        except Exception as e:
+            print(f"[Adviser] Error overlay_push_tareas: {e}")
         return {"ok": True}
 
     # ═════════════════════════════════════════════════════════════════════════
@@ -526,7 +557,7 @@ class AdviserAPI:
                 js_api           = self,
                 width            = 300,
                 height           = 345, # Altura base, se ajusta desde JS
-                resizable        = False,
+                resizable        = True,
                 frameless        = True,
                 on_top           = True,
                 background_color = "#080A0F",

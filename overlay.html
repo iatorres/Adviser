@@ -18,7 +18,7 @@
     --accent-glow:  rgba(247, 0, 255, 0.12);
     --accent-glow2: rgba(247, 0, 255, 0.20);
     --green:        #00E5A0;
-    --green-dim:    rgba(0, 229, 160, 0.15);
+    --green-glow:   rgba(0, 229, 160, 0.12);
     --orange:       #FF8C42;
     --red:          #FF4458;
     --red-glow:     rgba(255,68,88,0.12);
@@ -39,7 +39,7 @@
     --accent-glow:  rgba(144, 0, 204, 0.10);
     --accent-glow2: rgba(144, 0, 204, 0.18);
     --green:        #007A50;
-    --green-dim:    rgba(0, 122, 80, 0.12);
+    --green-glow:   rgba(0, 122, 80, 0.12);
     --orange:       #C05E00;
     --red:          #E0253A;
     --red-glow:     rgba(224,37,58,0.10);
@@ -49,7 +49,8 @@
   }
 
   html, body {
-    width: 300px;
+    width: 100%;
+    height: 100%;
     background: transparent;
     overflow: hidden;
     font-family: var(--sans);
@@ -57,21 +58,23 @@
     user-select: none;
   }
 
-  /* ── Widget ───────────────────────────────────────────────────────────── */
+  /* Widget ocupa todo el viewport de la ventana overlay */
   #widget {
-    width: 300px;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
     background: var(--bg2);
     border: 1px solid var(--border2);
-    border-radius: 18px;
+    border-radius: 14px;
     overflow: hidden;
     box-shadow:
-      0 12px 40px rgba(0,0,0,0.55),
+      0 8px 28px rgba(0,0,0,0.55),
       0 0 0 1px rgba(255,255,255,0.03),
-      0 0 32px var(--accent-glow);
+      0 0 24px var(--accent-glow);
     position: relative;
   }
 
-  /* Línea de acento superior */
   #widget::before {
     content: '';
     position: absolute;
@@ -79,30 +82,28 @@
     height: 1.5px;
     background: linear-gradient(90deg, transparent, var(--accent), transparent);
     z-index: 2;
+    pointer-events: none;
   }
 
-  /* ── Header (siempre visible, zona de arrastre) ───────────────────────── */
+  /* ── Header ─────────────────────────────────────────────────────────── */
   #widget-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 12px 10px 14px;
+    padding: 8px 10px 8px 14px;
     background: var(--bg);
     cursor: grab;
     -webkit-app-region: drag;
+    flex-shrink: 0;
   }
-
   #widget-header:active { cursor: grabbing; }
-
-  /* Cuando está expandido, separar header del body con borde */
 
   .wh-left {
     display: flex;
     align-items: center;
     gap: 8px;
-    min-width: 0;
     flex: 1;
-    overflow: hidden;
+    min-width: 0;
   }
 
   .wh-dot {
@@ -113,45 +114,46 @@
     flex-shrink: 0;
     animation: glow-pulse 2s infinite;
   }
-
   @keyframes glow-pulse {
     0%, 100% { box-shadow: 0 0 4px var(--accent); }
     50%       { box-shadow: 0 0 10px var(--accent), 0 0 18px var(--accent-glow2); }
   }
 
-  /* Contenido del header izquierdo — alterna entre label y tiempo compacto */
-  .wh-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    overflow: hidden;
-    flex: 1;
-  }
-
-  .wh-label {
+  .wh-time {
     font-family: var(--mono);
-    font-size: 9px;
-    font-weight: 500;
-    color: var(--text3);
-    letter-spacing: 0.13em;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
-
-  /* Tiempo compacto: solo visible en modo pill */
-  .wh-compact-time {
-    font-family: var(--mono);
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 700;
     color: var(--text1);
     letter-spacing: 0.05em;
-    white-space: nowrap;
-    display: none;
+    line-height: 1;
+    transition: color 300ms;
+  }
+  .wh-time.warning { color: var(--orange); }
+  .wh-time.danger  { color: var(--red); animation: blink-time 1s infinite; }
+  @keyframes blink-time {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
   }
 
-  /* En modo pill mostramos el tiempo y ocultamos el label */
+  .wh-time-label {
+    font-family: var(--mono);
+    font-size: 8px;
+    color: var(--text3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    align-self: flex-end;
+    padding-bottom: 1px;
+  }
 
-  /* Botones de control */
+  .wh-prog-bar { height: 2px; background: var(--border); flex-shrink: 0; }
+  .wh-prog-fill {
+    height: 100%;
+    background: var(--green);
+    transition: width 1s linear, background 500ms;
+  }
+  .wh-prog-fill.warning { background: var(--orange); }
+  .wh-prog-fill.danger  { background: var(--red); }
+
   .wh-actions {
     display: flex;
     align-items: center;
@@ -161,285 +163,193 @@
   }
 
   .wh-btn {
-    width: 22px; height: 22px;
+    width: 20px; height: 20px;
     border-radius: 50%;
     border: 1px solid var(--border2);
     background: var(--bg3);
     display: flex; align-items: center; justify-content: center;
     cursor: pointer;
-    font-size: 11px;
+    font-size: 10px;
     line-height: 1;
     transition: background 120ms, border-color 120ms, color 120ms;
-    flex-shrink: 0;
     color: var(--text2);
   }
+  .wh-btn:hover { background: var(--red-glow); border-color: var(--red); color: var(--red); }
 
-
-  .wh-btn-close:hover {
-    background: var(--red-glow);
-    border-color: var(--red);
-    color: var(--red);
-  }
-
+  /* ── Body scrollable ────────────────────────────────────────────────── */
   #widget-body {
-    padding: 20px 20px 16px;
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 14px 10px;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 16px;
+    gap: 8px;
+    -webkit-overflow-scrolling: touch;
   }
+  #widget-body::-webkit-scrollbar { width: 3px; }
+  #widget-body::-webkit-scrollbar-track { background: transparent; }
+  #widget-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
 
-  /* ── Anillo ───────────────────────────────────────────────────────────── */
-  .ring-wrap {
-    position: relative;
-    width: 140px; height: 140px;
-  }
+  /* ── Stats row ──────────────────────────────────────────────────────── */
+  .stats-row { display: flex; align-items: center; gap: 10px; }
 
-  .ring-svg {
-    width: 140px; height: 140px;
-    transform: rotate(-90deg);
-  }
-
-  .ring-bg {
-    fill: none;
-    stroke: var(--border2);
-    stroke-width: 7;
-  }
-
-  .ring-fill {
-    fill: none;
-    stroke: var(--green);
-    stroke-width: 7;
-    stroke-linecap: round;
-    stroke-dasharray: 376.99;
-    stroke-dashoffset: 0;
-    transition: stroke-dashoffset 1s linear, stroke 0.5s ease;
-    filter: drop-shadow(0 0 6px var(--green));
-  }
-
-  .ring-fill.warning { stroke: var(--orange); filter: drop-shadow(0 0 6px var(--orange)); }
-  .ring-fill.danger  { stroke: var(--red); filter: drop-shadow(0 0 8px var(--red)); animation: danger-pulse 1s infinite; }
-
-  @keyframes danger-pulse {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0.4; }
-  }
-
-  .ring-center {
-    position: absolute;
-    inset: 0;
+  .stat-pill {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-  }
-
-  .ring-time {
-    font-family: var(--mono);
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--text1);
-    letter-spacing: 0.04em;
-    line-height: 1;
-  }
-
-  .ring-time-label {
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--text3);
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  /* ── Tareas ───────────────────────────────────────────────────────────── */
-  .tasks-block {
-    width: 100%;
+    align-items: baseline;
+    gap: 4px;
     background: var(--bg3);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .tasks-count-col {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    border-radius: 8px;
+    padding: 6px 10px;
     flex-shrink: 0;
   }
 
-  .tasks-count-num {
+  .stat-num {
     font-family: var(--mono);
-    font-size: 28px;
+    font-size: 20px;
     font-weight: 700;
     color: var(--text1);
     line-height: 1;
     transition: color 300ms, text-shadow 300ms;
   }
+  .stat-num.all-done { color: var(--green); text-shadow: 0 0 10px var(--green); }
 
-  .tasks-count-num.all-done {
-    color: var(--green);
-    text-shadow: 0 0 12px var(--green);
-  }
-
-  .tasks-count-label {
+  .stat-label {
     font-family: var(--mono);
     font-size: 8px;
     color: var(--text3);
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    margin-top: 2px;
   }
 
-  .tasks-divider {
-    width: 1px; height: 36px;
-    background: var(--border2);
-    flex-shrink: 0;
-  }
+  .stat-info { flex: 1; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
 
-  .tasks-info-col {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .tasks-info-text {
+  .stat-text {
     font-size: 11px;
     color: var(--text2);
-    line-height: 1.4;
-  }
-
-  .tasks-info-text strong { color: var(--text1); font-weight: 600; }
-
-  .tasks-prog-wrap {
-    height: 3px;
-    background: var(--border2);
-    border-radius: 99px;
+    line-height: 1.3;
+    white-space: nowrap;
     overflow: hidden;
+    text-overflow: ellipsis;
   }
+  .stat-text strong { color: var(--text1); font-weight: 600; }
 
-  .tasks-prog-fill {
-    height: 100%;
-    background: var(--green);
-    border-radius: 99px;
-    transition: width 300ms ease;
-  }
+  .prog-wrap { height: 3px; background: var(--border2); border-radius: 99px; overflow: hidden; }
+  .prog-fill  { height: 100%; background: var(--green); border-radius: 99px; transition: width 300ms ease; }
 
-  /* ── Lista de tareas restantes ────────────────────────────────────────── */
-  .remaining-list {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding-right: 4px;
-  }
+  /* ── Lista pendientes ───────────────────────────────────────────────── */
+  .remaining-list { display: flex; flex-direction: column; gap: 4px; }
 
   .remaining-item {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px 10px;
-    font-size: 11px;
-    color: var(--text2);
     display: flex;
     align-items: flex-start;
-    gap: 8px;
+    gap: 7px;
+    padding: 6px 9px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    font-size: 11px;
+    color: var(--text2);
     transition: background 120ms;
+    animation: slideIn 150ms ease;
   }
-  .remaining-item:hover { background: var(--bg2); border-color: var(--border2); color: var(--text1); }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-6px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  .remaining-item:hover { background: var(--bg); border-color: var(--border2); color: var(--text1); }
+  .remaining-dot { margin-top: 4px; width: 4px; height: 4px; border-radius: 50%; border: 1px solid var(--text3); flex-shrink: 0; }
+  .remaining-text { flex: 1; line-height: 1.3; }
 
-  .remaining-dot {
-    margin-top: 4px;
-    width: 5px; height: 5px;
-    border-radius: 50%;
-    border: 1px solid var(--text3);
-    flex-shrink: 0;
-  }
-  
-  .remaining-text {
-    flex: 1;
-    line-height: 1.3;
-  }
-
-  /* ── Footer ───────────────────────────────────────────────────────────── */
-  #widget-footer {
-    padding: 0 16px 16px;
-  }
+  /* ── Footer ─────────────────────────────────────────────────────────── */
+  #widget-footer { padding: 0 14px 12px; flex-shrink: 0; }
 
   .btn-restaurar {
     width: 100%;
-    padding: 9px;
+    padding: 8px;
     background: var(--accent-glow);
     border: 1px solid rgba(200, 0, 255, 0.25);
-    border-radius: 10px;
+    border-radius: 8px;
     color: var(--accent);
     font-family: var(--sans);
     font-size: 11px;
     font-weight: 700;
     cursor: pointer;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.03em;
     transition: background 140ms;
     -webkit-app-region: no-drag;
   }
-
   .btn-restaurar:hover { background: var(--accent-glow2); }
+
+  /* ── Handle de resize ───────────────────────────────────────────────── */
+  /* pywebview frameless no expone handles OS nativos.
+     Implementamos uno manual: el usuario arrastra la esquina inferior
+     derecha y llamamos overlay_resize(w, h) desde Python. */
+  #resize-handle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 18px;
+    height: 18px;
+    cursor: se-resize;
+    -webkit-app-region: no-drag;
+    z-index: 10;
+    background:
+      radial-gradient(circle, var(--text3) 1px, transparent 1px) 4px  4px  / 4px 4px,
+      radial-gradient(circle, var(--text3) 1px, transparent 1px) 8px  8px  / 4px 4px,
+      radial-gradient(circle, var(--text3) 1px, transparent 1px) 12px 12px / 4px 4px,
+      radial-gradient(circle, var(--text3) 1px, transparent 1px) 4px  8px  / 4px 4px,
+      radial-gradient(circle, var(--text3) 1px, transparent 1px) 8px  12px / 4px 4px,
+      radial-gradient(circle, var(--text3) 1px, transparent 1px) 4px  12px / 4px 4px;
+    background-repeat: no-repeat;
+    opacity: 0.4;
+    transition: opacity 150ms;
+    border-bottom-right-radius: 14px;
+  }
+  #resize-handle:hover { opacity: 1; }
 </style>
 </head>
 <body>
 
 <div id="widget">
 
-  <!-- Header — siempre visible, zona de arrastre -->
   <div id="widget-header">
     <div class="wh-left">
       <div class="wh-dot"></div>
-      <div class="wh-info">
-        <span class="wh-label">Adviser · En curso</span>
-        <span class="wh-compact-time" id="wh-compact-time">--:--</span>
-      </div>
+      <span class="wh-time" id="ov-time">--:--</span>
+      <span class="wh-time-label">restante</span>
     </div>
     <div class="wh-actions">
-      <button class="wh-btn wh-btn-close"    onclick="cerrarOverlay()"               title="Cerrar">✕</button>
+      <button class="wh-btn" onclick="cerrarOverlay()" title="Cerrar">✕</button>
     </div>
   </div>
 
-  <!-- Cuerpo — se oculta al colapsar -->
-  <div id="widget-body">
-    <div class="ring-wrap">
-      <svg class="ring-svg" viewBox="0 0 140 140">
-        <circle class="ring-bg"   cx="70" cy="70" r="60"/>
-        <circle class="ring-fill" id="ov-ring" cx="70" cy="70" r="60"/>
-      </svg>
-      <div class="ring-center">
-        <div class="ring-time" id="ov-time">--:--</div>
-        <div class="ring-time-label">restante</div>
-      </div>
-    </div>
+  <div class="wh-prog-bar">
+    <div class="wh-prog-fill" id="ov-time-prog" style="width:100%"></div>
+  </div>
 
-    <div class="tasks-block">
-      <div class="tasks-count-col">
-        <div class="tasks-count-num" id="ov-pendientes">-</div>
-        <div class="tasks-count-label">pendientes</div>
+  <div id="widget-body">
+    <div class="stats-row">
+      <div class="stat-pill">
+        <div class="stat-num" id="ov-pendientes">-</div>
+        <div class="stat-label">pend.</div>
       </div>
-      <div class="tasks-divider"></div>
-      <div class="tasks-info-col">
-        <div class="tasks-info-text" id="ov-tasks-text">Cargando...</div>
-        <div class="tasks-prog-wrap">
-          <div class="tasks-prog-fill" id="ov-prog" style="width:0%"></div>
+      <div class="stat-info">
+        <div class="stat-text" id="ov-tasks-text">Cargando...</div>
+        <div class="prog-wrap">
+          <div class="prog-fill" id="ov-prog" style="width:0%"></div>
         </div>
       </div>
     </div>
 
-    <div class="remaining-list" id="ov-remaining-list"></div>
+    <div class="remaining-list" id="ov-remaining-list" style="display:none"></div>
   </div>
 
   <div id="widget-footer">
     <button class="btn-restaurar" onclick="restaurarApp()">↗ Volver a Adviser</button>
   </div>
+
+  <div id="resize-handle"></div>
 
 </div>
 
@@ -452,9 +362,13 @@
     tareas:        [],
   };
 
-  let currentOverlayHeight = 0;
+  function syncHeight() {
+    // Solo se usa al abrir para ajustar la altura inicial
+    const h = document.getElementById('widget').scrollHeight;
+    if (window.pywebview) window.pywebview.api.overlay_set_height(h + 2);
+  }
 
-  // ── Init ──────────────────────────────────────────────────────────────────
+  // ── Init ─────────────────────────────────────────────────────────────────
   window.addEventListener('pywebviewready', async () => {
     const estado = await window.pywebview.api.overlay_get_estado();
     ov.segsRestantes = estado.segs_restantes;
@@ -462,82 +376,142 @@
     ov.hechas        = estado.hechas;
     ov.total         = estado.total;
     ov.tareas        = estado.tareas || [];
-
-    if (estado.tema === 'light') {
-      document.documentElement.setAttribute('data-theme', 'light');
-    }
-
-    // Empezar expandido
+    if (estado.tema === 'light') document.documentElement.setAttribute('data-theme', 'light');
     renderOverlay();
+    requestAnimationFrame(() => requestAnimationFrame(syncHeight));
+    initResizeHandle();
   });
 
-  // ── Tick desde Python ─────────────────────────────────────────────────────
+  // ── Tick cada segundo desde Python ───────────────────────────────────────
+  // Solo actualiza tiempo y contadores. La lista solo se redibuja si cambió.
   window._ovTick = function(segsRestantes, hechas, total, tareas) {
+    const listaCambio = hechas !== ov.hechas || total !== ov.total ||
+      (tareas && JSON.stringify(tareas) !== JSON.stringify(ov.tareas));
     ov.segsRestantes = segsRestantes;
-    ov.hechas        = hechas;
-    ov.total         = total;
+    ov.hechas = hechas;
+    ov.total  = total;
     if (tareas) ov.tareas = tareas;
-    renderOverlay();
+    renderTiempo();
+    renderContadores();
+    if (listaCambio) renderLista();
   };
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // ── Nueva tarea desde la ventana principal ────────────────────────────────
+  window._ovNuevaTarea = function(tareasJson) {
+    const tareas = typeof tareasJson === 'string' ? JSON.parse(tareasJson) : tareasJson;
+    ov.tareas = tareas;
+    ov.total  = tareas.length;
+    ov.hechas = tareas.filter(t => t.done).length;
+    renderContadores();
+    renderLista();
+  };
+
+  // ── Render inicial completo ───────────────────────────────────────────────
   function renderOverlay() {
+    renderTiempo();
+    renderContadores();
+    renderLista();
+  }
+
+  // Tiempo + barra de progreso (cada segundo)
+  function renderTiempo() {
     const mm = String(Math.floor(ov.segsRestantes / 60)).padStart(2, '0');
     const ss = String(ov.segsRestantes % 60).padStart(2, '0');
-    const ts = `${mm}:${ss}`;
+    const timeEl = document.getElementById('ov-time');
+    timeEl.textContent = `${mm}:${ss}`;
 
-    document.getElementById('ov-time').textContent         = ts;
-    document.getElementById('wh-compact-time').textContent = ts;
-
-    const CIRC    = 376.99;
     const progres = ov.segsTotal > 0 ? ov.segsRestantes / ov.segsTotal : 0;
-    const ring    = document.getElementById('ov-ring');
-    ring.style.strokeDashoffset = CIRC * (1 - progres);
-    ring.classList.remove('warning', 'danger');
-    if (progres <= 0.15)      ring.classList.add('danger');
-    else if (progres <= 0.35) ring.classList.add('warning');
+    const level = progres <= 0.15 ? 'danger' : progres <= 0.35 ? 'warning' : '';
+    const cls = 'wh-time' + (level ? ' ' + level : '');
+    if (timeEl.className !== cls) timeEl.className = cls;
 
+    const tpEl = document.getElementById('ov-time-prog');
+    tpEl.style.width = (progres * 100) + '%';
+    const tpCls = 'wh-prog-fill' + (level ? ' ' + level : '');
+    if (tpEl.className !== tpCls) tpEl.className = tpCls;
+  }
+
+  // Contadores (solo escribe al DOM si el valor cambió)
+  function renderContadores() {
     const pendientes = ov.total - ov.hechas;
-    const numEl      = document.getElementById('ov-pendientes');
-    numEl.textContent = pendientes;
+    const numEl = document.getElementById('ov-pendientes');
+    if (numEl.textContent !== String(pendientes)) numEl.textContent = pendientes;
     numEl.classList.toggle('all-done', pendientes === 0);
 
-    document.getElementById('ov-prog').style.width =
-      ov.total > 0 ? (ov.hechas / ov.total * 100) + '%' : '0%';
+    const progWidth = ov.total > 0 ? (ov.hechas / ov.total * 100) + '%' : '0%';
+    const progEl = document.getElementById('ov-prog');
+    if (progEl.style.width !== progWidth) progEl.style.width = progWidth;
 
-    document.getElementById('ov-tasks-text').innerHTML = pendientes === 0
-      ? '<strong>¡Todo listo!</strong><br>Podés finalizar.'
+    const pendEl = document.getElementById('ov-tasks-text');
+    const html = pendientes === 0
+      ? '<strong>¡Todo listo!</strong> Podés finalizar.'
       : `<strong>${ov.hechas}</strong> de <strong>${ov.total}</strong> completadas`;
+    if (pendEl.innerHTML !== html) pendEl.innerHTML = html;
+  }
 
-    // Render lista restantes
-    const listEl = document.getElementById('ov-remaining-list');
+  // Lista de pendientes — solo se llama cuando las tareas realmente cambiaron
+  function renderLista() {
+    const listEl  = document.getElementById('ov-remaining-list');
     const notDone = (ov.tareas || []).filter(t => !t.done);
 
-    if (pendientes === 0 || notDone.length === 0) {
-      listEl.style.display = 'none';
-    } else {
-      listEl.style.display = 'flex';
-      listEl.innerHTML = notDone.map(t => `
-        <div class="remaining-item">
-          <div class="remaining-dot"></div>
-          <div class="remaining-text">${escapeHtml(t.texto)}</div>
-        </div>
-      `).join('');
+    if (notDone.length === 0) {
+      if (listEl.style.display !== 'none') {
+        listEl.style.display = 'none';
+        listEl.innerHTML = '';
+      }
+      return;
     }
+
+    listEl.style.display = 'flex';
+
+    // Diff: compara textos actuales vs nuevos antes de tocar el DOM
+    const items = listEl.querySelectorAll('.remaining-text');
+    const igual = items.length === notDone.length &&
+      notDone.every((t, i) => items[i].textContent === t.texto);
+    if (igual) return;
+
+    listEl.innerHTML = notDone.map(t => `
+      <div class="remaining-item">
+        <div class="remaining-dot"></div>
+        <div class="remaining-text">${escapeHtml(t.texto)}</div>
+      </div>
+    `).join('');
   }
 
-  function escapeHtml(str) {
-    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  // ── Resize manual ─────────────────────────────────────────────────────────
+  function initResizeHandle() {
+    const handle = document.getElementById('resize-handle');
+    let startX, startY, startW, startH;
+
+    handle.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      startX = e.screenX;
+      startY = e.screenY;
+      startW = document.documentElement.clientWidth;
+      startH = document.documentElement.clientHeight;
+
+      const onMove = (e) => {
+        const newW = Math.max(240, startW + (e.screenX - startX));
+        const newH = Math.max(100, startH + (e.screenY - startY));
+        if (window.pywebview) window.pywebview.api.overlay_resize(newW, newH);
+      };
+
+      const onUp = () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      };
+
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
   }
 
-  // ── Cerrar / restaurar ────────────────────────────────────────────────────
-  function cerrarOverlay() {
-    if (window.pywebview) window.pywebview.api.overlay_cerrar();
+  function escapeHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  function restaurarApp() {
-    if (window.pywebview) window.pywebview.api.overlay_restaurar_app();
-  }
+  function cerrarOverlay() { if (window.pywebview) window.pywebview.api.overlay_cerrar(); }
+  function restaurarApp()  { if (window.pywebview) window.pywebview.api.overlay_restaurar_app(); }
 </script>
 </body>
 </html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Adviser · Rutina</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:           #080A0F;
+    --bg2:          #0D1018;
+    --bg3:          #12151E;
+    --border:       #1C2030;
+    --border2:      #252B3D;
+    --accent:       #e100ff;
+    --accent-glow:  rgba(247,0,255,0.10);
+    --accent-glow2: rgba(247,0,255,0.18);
+    --green:        #00E5A0;
+    --green-glow:   rgba(0,229,160,0.10);
+    --green-glow2:  rgba(0,229,160,0.18);
+    --red:          #FF4458;
+    --red-glow:     rgba(255,68,88,0.12);
+    --text1:        #E8EBF5;
+    --text2:        #6B7494;
+    --text3:        #2E3450;
+    --mono:         'JetBrains Mono', monospace;
+    --sans:         'Outfit', sans-serif;
+  }
+
+  [data-theme="light"] {
+    --bg:           #F0F2FA;
+    --bg2:          #FFFFFF;
+    --bg3:          #E8EBF8;
+    --border:       #D0D5EE;
+    --border2:      #B8BEDD;
+    --accent:       #9000CC;
+    --accent-glow:  rgba(144,0,204,0.08);
+    --accent-glow2: rgba(144,0,204,0.16);
+    --green:        #007A50;
+    --green-glow:   rgba(0,122,80,0.10);
+    --green-glow2:  rgba(0,122,80,0.18);
+    --red:          #E0253A;
+    --red-glow:     rgba(224,37,58,0.10);
+    --text1:        #0E1120;
+    --text2:        #4A5070;
+    --text3:        #9BA3C8;
+  }
+
+  html, body {
+    width: 320px;
+    background: transparent;
+    overflow: hidden;
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+  }
+
+  #widget {
+    width: 320px;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 14px;
+    overflow: hidden;
+    position: relative;
+    box-shadow:
+      0 8px 28px rgba(0,0,0,0.55),
+      0 0 0 1px rgba(255,255,255,0.03),
+      0 0 24px var(--accent-glow);
+    animation: popIn 280ms cubic-bezier(0.34,1.4,0.64,1);
+    cursor: grab;
+    -webkit-app-region: drag;
+  }
+  #widget:active { cursor: grabbing; }
+
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.93) translateY(8px); }
+    to   { opacity: 1; transform: scale(1)    translateY(0); }
+  }
+
+  /* Línea superior accent → green */
+  #widget::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent 5%, var(--accent) 35%, var(--green) 65%, transparent 95%);
+    z-index: 3;
+  }
+
+  /* ── Fila superior: hora + punto pulsante + botón cierre ─────────────── */
+  .row-top {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 10px 5px 12px;
+    -webkit-app-region: drag;
+  }
+
+  .live-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 5px var(--accent);
+    flex-shrink: 0;
+    animation: blink 1.4s ease infinite;
+  }
+  @keyframes blink {
+    0%,100% { opacity:1; box-shadow: 0 0 5px var(--accent); }
+    50%      { opacity:.3; box-shadow: none; }
+  }
+
+  .hora-tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 0.1em;
+    flex: 1;
+  }
+
+  .btn-close {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 1px solid var(--border2);
+    background: var(--bg3);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 9px;
+    color: var(--text2);
+    flex-shrink: 0;
+    transition: background 120ms, border-color 120ms, color 120ms;
+    -webkit-app-region: no-drag;
+    line-height: 1;
+  }
+  .btn-close:hover { background: var(--red-glow); border-color: var(--red); color: var(--red); }
+
+  /* ── Tarea y mensaje ─────────────────────────────────────────────────── */
+  .row-content {
+    padding: 0 12px 8px;
+    -webkit-app-region: drag;
+  }
+
+  .task-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text1);
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 3px;
+  }
+
+  .task-msg {
+    font-size: 11px;
+    color: var(--text2);
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ── Fila de botones ─────────────────────────────────────────────────── */
+  .row-actions {
+    display: flex;
+    gap: 6px;
+    padding: 0 10px 9px;
+    -webkit-app-region: no-drag;
+  }
+
+  .btn-abrir {
+    flex: 1;
+    padding: 6px;
+    background: var(--accent-glow);
+    border: 1px solid rgba(200,0,255,0.2);
+    border-radius: 8px;
+    color: var(--accent);
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: background 120ms;
+  }
+  .btn-abrir:hover { background: var(--accent-glow2); }
+
+  .btn-ok {
+    flex: 1;
+    padding: 6px;
+    background: var(--green-glow);
+    border: 1px solid rgba(0,229,160,0.2);
+    border-radius: 8px;
+    color: var(--green);
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: background 120ms;
+  }
+  .btn-ok:hover { background: var(--green-glow2); }
+</style>
+</head>
+<body>
+
+<div id="widget">
+
+  <div class="row-top">
+    <div class="live-dot"></div>
+    <span class="hora-tag" id="wh-hora">--:00 · AHORA</span>
+    <button class="btn-close" onclick="cerrar()" title="Cerrar">✕</button>
+  </div>
+
+  <div class="row-content">
+    <div class="task-title"  id="task-titulo">Cargando...</div>
+    <div class="task-msg"    id="task-mensaje">...</div>
+  </div>
+
+  <div class="row-actions">
+    <button class="btn-abrir" onclick="abrirApp()">↗ Abrir Adviser</button>
+    <button class="btn-ok"    onclick="cerrar()">✓ Entendido</button>
+  </div>
+
+</div>
+
+<script>
+  window.addEventListener('pywebviewready', async () => {
+    const d = await window.pywebview.api.rutina_overlay_get_datos();
+    if (d.tema === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    document.getElementById('wh-hora').textContent     = d.hora_str + ' · AHORA';
+    document.getElementById('task-titulo').textContent  = d.titulo;
+    document.getElementById('task-mensaje').textContent = d.mensaje;
+  });
+
+  function cerrar()   { if (window.pywebview) window.pywebview.api.rutina_overlay_cerrar(); }
+  function abrirApp() { if (window.pywebview) window.pywebview.api.rutina_overlay_abrir_app(); }
+</script>
+</body>
+</html>

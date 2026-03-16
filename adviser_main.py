@@ -59,16 +59,25 @@ DIAS  = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo
 HORAS = list(range(24))
 
 if getattr(sys, 'frozen', False):
+    # Ejecutando como .exe compilado con PyInstaller
     _app_path = os.path.dirname(sys.executable)
+    # Si los HTML no están junto al .exe (caso --onefile), buscar en _MEIPASS
+    if not os.path.exists(os.path.join(_app_path, "ui.html")):
+        _app_path = sys._MEIPASS
 else:
     _app_path = os.path.dirname(os.path.abspath(__file__))
 
-RUTA_JSON    = os.path.join(_app_path, "rutina.json")
-RUTA_ICON    = os.path.join(_app_path, "icon.png")
-RUTA_CONFIG  = os.path.join(_app_path, "config.json")
-RUTA_HTML    = os.path.join(_app_path, "ui.html")
-RUTA_OVERLAY = os.path.join(_app_path, "overlay.html")
-RUTA_RUTINA_OVERLAY = os.path.join(_app_path, "rutina_overlay.html")
+def _ruta_web(nombre):
+    """Convierte una ruta de archivo a URL file:/// para pywebview."""
+    ruta = os.path.join(_app_path, nombre)
+    return "file:///" + ruta.replace("\\", "/")
+
+RUTA_JSON           = os.path.join(_app_path, "rutina.json")
+RUTA_ICON           = os.path.join(_app_path, "icon.png")
+RUTA_CONFIG         = os.path.join(_app_path, "config.json")
+RUTA_HTML           = _ruta_web("ui.html")
+RUTA_OVERLAY        = _ruta_web("overlay.html")
+RUTA_RUTINA_OVERLAY = _ruta_web("rutina_overlay.html")
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────

@@ -7,15 +7,14 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
-        # Archivos que deben incluirse en el .exe
-        ('ui.html',      '.'),
-        ('overlay.html',        '.'),
+        ('ui.html',             '.'),
+        ('overlay.html',        '.'),   # ← tu overlay nuevo
         ('rutina_overlay.html', '.'),
-        ('style.css',    '.'),
-        ('script.js',    '.'),
-        ('icon.png',     '.'),
-        ('rutina.json',  '.'),
-        ('config.json',  '.'),
+        ('style.css',           '.'),
+        ('script.js',           '.'),
+        ('icon.png',            '.'),
+        ('rutina.json',         '.'),
+        ('config.json',         '.'),
     ],
     hiddenimports=[
         'webview',

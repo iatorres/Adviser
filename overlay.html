@@ -18,7 +18,6 @@
     --accent-glow:  rgba(247, 0, 255, 0.12);
     --accent-glow2: rgba(247, 0, 255, 0.20);
     --green:        #00E5A0;
-    --green-glow:   rgba(0, 229, 160, 0.12);
     --orange:       #FF8C42;
     --red:          #FF4458;
     --red-glow:     rgba(255,68,88,0.12);
@@ -39,7 +38,6 @@
     --accent-glow:  rgba(144, 0, 204, 0.10);
     --accent-glow2: rgba(144, 0, 204, 0.18);
     --green:        #007A50;
-    --green-glow:   rgba(0, 122, 80, 0.12);
     --orange:       #C05E00;
     --red:          #E0253A;
     --red-glow:     rgba(224,37,58,0.10);
@@ -51,31 +49,27 @@
   html, body {
     width: 100%;
     height: 100%;
-    background: transparent;
+    background: var(--bg2);
     overflow: hidden;
     font-family: var(--sans);
     -webkit-font-smoothing: antialiased;
     user-select: none;
   }
 
-  /* Widget ocupa todo el viewport de la ventana overlay */
-  #widget {
+  /* Con frameless=False el OS dibuja la barra de título encima.
+     El contenido empieza desde el borde top del área cliente. */
+  #app {
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
     background: var(--bg2);
-    border: 1px solid var(--border2);
-    border-radius: 14px;
     overflow: hidden;
-    box-shadow:
-      0 8px 28px rgba(0,0,0,0.55),
-      0 0 0 1px rgba(255,255,255,0.03),
-      0 0 24px var(--accent-glow);
     position: relative;
   }
 
-  #widget::before {
+  /* Línea de acento superior (queda justo bajo la barra nativa) */
+  #app::before {
     content: '';
     position: absolute;
     top: 0; left: 16px; right: 16px;
@@ -85,25 +79,13 @@
     pointer-events: none;
   }
 
-  /* ── Header ─────────────────────────────────────────────────────────── */
-  #widget-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 10px 8px 14px;
-    background: var(--bg);
-    cursor: grab;
-    -webkit-app-region: drag;
+  /* ── Barra de progreso de tiempo ────────────────────────────────────── */
+  .time-bar-wrap {
     flex-shrink: 0;
-  }
-  #widget-header:active { cursor: grabbing; }
-
-  .wh-left {
+    padding: 10px 14px 0;
     display: flex;
     align-items: center;
-    gap: 8px;
-    flex: 1;
-    min-width: 0;
+    gap: 10px;
   }
 
   .wh-dot {
@@ -121,7 +103,7 @@
 
   .wh-time {
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
     color: var(--text1);
     letter-spacing: 0.05em;
@@ -142,39 +124,36 @@
     letter-spacing: 0.1em;
     text-transform: uppercase;
     align-self: flex-end;
-    padding-bottom: 1px;
+    padding-bottom: 2px;
   }
 
-  .wh-prog-bar { height: 2px; background: var(--border); flex-shrink: 0; }
-  .wh-prog-fill {
+  /* Barra delgada de progreso de tiempo */
+  .prog-time-wrap {
+    flex-shrink: 0;
+    padding: 6px 14px 0;
+  }
+  .prog-time-bg {
+    height: 2px;
+    background: var(--border2);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .prog-time-fill {
     height: 100%;
     background: var(--green);
+    border-radius: 99px;
     transition: width 1s linear, background 500ms;
   }
-  .wh-prog-fill.warning { background: var(--orange); }
-  .wh-prog-fill.danger  { background: var(--red); }
+  .prog-time-fill.warning { background: var(--orange); }
+  .prog-time-fill.danger  { background: var(--red); }
 
-  .wh-actions {
-    display: flex;
-    align-items: center;
-    gap: 5px;
+  /* ── Separador ──────────────────────────────────────────────────────── */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 10px 14px 0;
     flex-shrink: 0;
-    -webkit-app-region: no-drag;
   }
-
-  .wh-btn {
-    width: 20px; height: 20px;
-    border-radius: 50%;
-    border: 1px solid var(--border2);
-    background: var(--bg3);
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    font-size: 10px;
-    line-height: 1;
-    transition: background 120ms, border-color 120ms, color 120ms;
-    color: var(--text2);
-  }
-  .wh-btn:hover { background: var(--red-glow); border-color: var(--red); color: var(--red); }
 
   /* ── Body scrollable ────────────────────────────────────────────────── */
   #widget-body {
@@ -277,57 +256,31 @@
     cursor: pointer;
     letter-spacing: 0.03em;
     transition: background 140ms;
-    -webkit-app-region: no-drag;
   }
   .btn-restaurar:hover { background: var(--accent-glow2); }
-
-  /* ── Handle de resize ───────────────────────────────────────────────── */
-  /* pywebview frameless no expone handles OS nativos.
-     Implementamos uno manual: el usuario arrastra la esquina inferior
-     derecha y llamamos overlay_resize(w, h) desde Python. */
-  #resize-handle {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    width: 18px;
-    height: 18px;
-    cursor: se-resize;
-    -webkit-app-region: no-drag;
-    z-index: 10;
-    background:
-      radial-gradient(circle, var(--text3) 1px, transparent 1px) 4px  4px  / 4px 4px,
-      radial-gradient(circle, var(--text3) 1px, transparent 1px) 8px  8px  / 4px 4px,
-      radial-gradient(circle, var(--text3) 1px, transparent 1px) 12px 12px / 4px 4px,
-      radial-gradient(circle, var(--text3) 1px, transparent 1px) 4px  8px  / 4px 4px,
-      radial-gradient(circle, var(--text3) 1px, transparent 1px) 8px  12px / 4px 4px,
-      radial-gradient(circle, var(--text3) 1px, transparent 1px) 4px  12px / 4px 4px;
-    background-repeat: no-repeat;
-    opacity: 0.4;
-    transition: opacity 150ms;
-    border-bottom-right-radius: 14px;
-  }
-  #resize-handle:hover { opacity: 1; }
 </style>
 </head>
 <body>
 
-<div id="widget">
+<div id="app">
 
-  <div id="widget-header">
-    <div class="wh-left">
-      <div class="wh-dot"></div>
-      <span class="wh-time" id="ov-time">--:--</span>
-      <span class="wh-time-label">restante</span>
-    </div>
-    <div class="wh-actions">
-      <button class="wh-btn" onclick="cerrarOverlay()" title="Cerrar">✕</button>
+  <!-- Tiempo + punto pulsante -->
+  <div class="time-bar-wrap">
+    <div class="wh-dot"></div>
+    <span class="wh-time" id="ov-time">--:--</span>
+    <span class="wh-time-label">restante</span>
+  </div>
+
+  <!-- Barra de progreso de tiempo -->
+  <div class="prog-time-wrap">
+    <div class="prog-time-bg">
+      <div class="prog-time-fill" id="ov-time-prog" style="width:100%"></div>
     </div>
   </div>
 
-  <div class="wh-prog-bar">
-    <div class="wh-prog-fill" id="ov-time-prog" style="width:100%"></div>
-  </div>
+  <div class="divider"></div>
 
+  <!-- Cuerpo scrollable -->
   <div id="widget-body">
     <div class="stats-row">
       <div class="stat-pill">
@@ -349,8 +302,6 @@
     <button class="btn-restaurar" onclick="restaurarApp()">↗ Volver a Adviser</button>
   </div>
 
-  <div id="resize-handle"></div>
-
 </div>
 
 <script>
@@ -362,12 +313,6 @@
     tareas:        [],
   };
 
-  function syncHeight() {
-    // Solo se usa al abrir para ajustar la altura inicial
-    const h = document.getElementById('widget').scrollHeight;
-    if (window.pywebview) window.pywebview.api.overlay_set_height(h + 2);
-  }
-
   // ── Init ─────────────────────────────────────────────────────────────────
   window.addEventListener('pywebviewready', async () => {
     const estado = await window.pywebview.api.overlay_get_estado();
@@ -378,12 +323,9 @@
     ov.tareas        = estado.tareas || [];
     if (estado.tema === 'light') document.documentElement.setAttribute('data-theme', 'light');
     renderOverlay();
-    requestAnimationFrame(() => requestAnimationFrame(syncHeight));
-    initResizeHandle();
   });
 
   // ── Tick cada segundo desde Python ───────────────────────────────────────
-  // Solo actualiza tiempo y contadores. La lista solo se redibuja si cambió.
   window._ovTick = function(segsRestantes, hechas, total, tareas) {
     const listaCambio = hechas !== ov.hechas || total !== ov.total ||
       (tareas && JSON.stringify(tareas) !== JSON.stringify(ov.tareas));
@@ -396,16 +338,6 @@
     if (listaCambio) renderLista();
   };
 
-  // ── Nueva tarea desde la ventana principal ────────────────────────────────
-  window._ovNuevaTarea = function(tareasJson) {
-    const tareas = typeof tareasJson === 'string' ? JSON.parse(tareasJson) : tareasJson;
-    ov.tareas = tareas;
-    ov.total  = tareas.length;
-    ov.hechas = tareas.filter(t => t.done).length;
-    renderContadores();
-    renderLista();
-  };
-
   // ── Render inicial completo ───────────────────────────────────────────────
   function renderOverlay() {
     renderTiempo();
@@ -413,7 +345,7 @@
     renderLista();
   }
 
-  // Tiempo + barra de progreso (cada segundo)
+  // Tiempo + barra de progreso
   function renderTiempo() {
     const mm = String(Math.floor(ov.segsRestantes / 60)).padStart(2, '0');
     const ss = String(ov.segsRestantes % 60).padStart(2, '0');
@@ -427,11 +359,11 @@
 
     const tpEl = document.getElementById('ov-time-prog');
     tpEl.style.width = (progres * 100) + '%';
-    const tpCls = 'wh-prog-fill' + (level ? ' ' + level : '');
+    const tpCls = 'prog-time-fill' + (level ? ' ' + level : '');
     if (tpEl.className !== tpCls) tpEl.className = tpCls;
   }
 
-  // Contadores (solo escribe al DOM si el valor cambió)
+  // Contadores
   function renderContadores() {
     const pendientes = ov.total - ov.hechas;
     const numEl = document.getElementById('ov-pendientes');
@@ -449,7 +381,7 @@
     if (pendEl.innerHTML !== html) pendEl.innerHTML = html;
   }
 
-  // Lista de pendientes — solo se llama cuando las tareas realmente cambiaron
+  // Lista — solo cuando las tareas cambiaron
   function renderLista() {
     const listEl  = document.getElementById('ov-remaining-list');
     const notDone = (ov.tareas || []).filter(t => !t.done);
@@ -463,8 +395,6 @@
     }
 
     listEl.style.display = 'flex';
-
-    // Diff: compara textos actuales vs nuevos antes de tocar el DOM
     const items = listEl.querySelectorAll('.remaining-text');
     const igual = items.length === notDone.length &&
       notDone.every((t, i) => items[i].textContent === t.texto);
@@ -476,34 +406,6 @@
         <div class="remaining-text">${escapeHtml(t.texto)}</div>
       </div>
     `).join('');
-  }
-
-  // ── Resize manual ─────────────────────────────────────────────────────────
-  function initResizeHandle() {
-    const handle = document.getElementById('resize-handle');
-    let startX, startY, startW, startH;
-
-    handle.addEventListener('mousedown', (e) => {
-      e.preventDefault();
-      startX = e.screenX;
-      startY = e.screenY;
-      startW = document.documentElement.clientWidth;
-      startH = document.documentElement.clientHeight;
-
-      const onMove = (e) => {
-        const newW = Math.max(240, startW + (e.screenX - startX));
-        const newH = Math.max(100, startH + (e.screenY - startY));
-        if (window.pywebview) window.pywebview.api.overlay_resize(newW, newH);
-      };
-
-      const onUp = () => {
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
-      };
-
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-    });
   }
 
   function escapeHtml(s) {

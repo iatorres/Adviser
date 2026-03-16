@@ -271,7 +271,14 @@ class AdviserAPI:
             return {"ok": True}
         except Exception:
             return {"ok": False}
-
+    def crono_agregar_tarea(self, texto):
+        """Agrega una tarea nueva al cronómetro en curso y notifica al overlay."""
+        try:
+            self._crono["tareas"].append({"texto": texto, "done": False})
+            self._push_overlay()   # notifica al overlay inmediatamente
+            return {"ok": True, "total": len(self._crono["tareas"])}
+        except Exception as e:
+            return {"ok": False, "error": str(e)}
     def crono_finalizar(self):
         self._crono["activo"] = False
         _main_queue.put(self._destruir_overlay)
@@ -375,20 +382,7 @@ class AdviserAPI:
         _main_queue.put(_resize)
         return {"ok": True}
     
-    def overlay_push_tareas(self, tareas_json):
-        """Empuja la lista de tareas actualizada al overlay. Llamado desde script.js."""
-        ov = self._overlay_win
-        if ov is None:
-            return {"ok": False}
-        try:
-            # Escapar para evaluate_js
-            escaped = tareas_json.replace('\\', '\\\\').replace('`', '\\`')
-            ov.evaluate_js(
-                f"window._ovNuevaTarea && window._ovNuevaTarea(`{escaped}`)"
-            )
-        except Exception as e:
-            print(f"[Adviser] Error overlay_push_tareas: {e}")
-        return {"ok": True}
+
 
     # ═════════════════════════════════════════════════════════════════════════
     #  OVERLAY DE RUTINA — llamado desde rutina_overlay.html
@@ -552,19 +546,68 @@ class AdviserAPI:
             return
         try:
             ov = webview.create_window(
-                title            = "Adviser Overlay",
+                title            = "Adviser · Cronómetro",
                 url              = RUTA_OVERLAY,
                 js_api           = self,
                 width            = 300,
-                height           = 345, # Altura base, se ajusta desde JS
+                height           = 220,
                 resizable        = True,
-                frameless        = True,
+                frameless        = False,
                 on_top           = True,
-                background_color = "#080A0F",
-                shadow           = True,
+                background_color = "#0D1018",
             )
             self._overlay_win  = ov
             self._overlay_open = True
+ 
+            # Limpiar estado cuando el usuario cierra con la X nativa del OS
+            def _on_overlay_closed():
+                self._overlay_win  = None
+                self._overlay_open = False
+                print("[Adviser] Overlay cerrado por el usuario (X nativa).")
+ 
+            ov.events.closed += _on_overlay_closed
+ 
+            # Forzar estilo Win32 para que el resize nativo funcione correctamente.
+            # pywebview winforms a veces crea la ventana sin WS_THICKFRAME.
+            # Lo aplicamos una vez que la ventana termina de cargar.
+            def _fix_resize():
+                try:
+                    import ctypes
+                    import ctypes.wintypes
+ 
+                    FindWindowW = ctypes.windll.user32.FindWindowW
+                    FindWindowW.restype = ctypes.wintypes.HWND
+                    hwnd = FindWindowW(None, "Adviser · Cronómetro")
+                    if not hwnd:
+                        return
+ 
+                    GWL_STYLE     = -16
+                    WS_THICKFRAME = 0x00040000  # bordes redimensionables
+                    WS_CAPTION    = 0x00C00000  # barra de título
+                    WS_SYSMENU    = 0x00080000  # botones min/max/cerrar
+ 
+                    GetWindowLongW = ctypes.windll.user32.GetWindowLongW
+                    SetWindowLongW = ctypes.windll.user32.SetWindowLongW
+                    SetWindowPos   = ctypes.windll.user32.SetWindowPos
+ 
+                    style = GetWindowLongW(hwnd, GWL_STYLE)
+                    style |= WS_THICKFRAME | WS_CAPTION | WS_SYSMENU
+                    SetWindowLongW(hwnd, GWL_STYLE, style)
+ 
+                    # Forzar repintado del frame
+                    SWP_NOMOVE     = 0x0002
+                    SWP_NOSIZE     = 0x0001
+                    SWP_NOZORDER   = 0x0004
+                    SWP_FRAMECHANGED = 0x0020
+                    SetWindowPos(hwnd, 0, 0, 0, 0, 0,
+                                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED)
+ 
+                    print("[Adviser] WS_THICKFRAME aplicado al overlay.")
+                except Exception as e:
+                    print(f"[Adviser] _fix_resize error: {e}")
+ 
+            ov.events.loaded += _fix_resize
+ 
             print("[Adviser] Overlay abierto.")
         except Exception as e:
             print(f"[Adviser] Error al crear overlay: {e}")

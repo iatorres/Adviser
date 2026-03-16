@@ -404,18 +404,23 @@ async function toggleTarea(idx) {
   }
 }
 
-function agregarTareaRunning() {
+async function agregarTareaRunning() {
   const input = document.getElementById('crono-nueva-tarea-running');
   const texto = input.value.trim();
   if (!texto) return;
+ 
+  if (window.pywebview) {
+    // Python agrega la tarea y notifica al overlay en un solo paso
+    const res = await window.pywebview.api.crono_agregar_tarea(texto);
+    if (!res.ok) return;
+  }
+ 
+  // Actualizar UI local
   crono.tareas.push({ texto, done: false });
   input.value = '';
   document.getElementById('crono-total-count').textContent = crono.tareas.length;
   renderRunningLista();
   actualizarDisplay();
-  if (window.pywebview) {
-    window.pywebview.api.crono_toggle_tarea(crono.tareas.length - 1, false);
-  }
   input.focus();
 }
 

@@ -72,7 +72,4 @@ Genera un `.exe` standalone en `dist/Adviser/` sin necesidad de tener Python ins
 ---
 
 ## 🔨 Próximas mejoras
-
-- Actividades temporales (solo para un día específico, sin modificar la rutina base).
-- Mejoras de diseño en la interfaz.
 - Soporte para múltiples perfiles de rutina.

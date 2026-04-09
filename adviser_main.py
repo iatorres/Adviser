@@ -369,7 +369,8 @@ class AdviserAPI:
             return {"ok": False}
         def _resize():
             try:
-                ov.resize(200, int(height))
+                # Usar el ancho actual de la ventana en lugar de hardcodear 200
+                ov.resize(ov.width, int(height))
             except Exception as e:
                 print(f"[Adviser] Error resize overlay: {e}")
         _main_queue.put(_resize)
@@ -381,8 +382,8 @@ class AdviserAPI:
         ov = self._overlay_win
         if ov is None:
             return {"ok": False}
-        w = max(240, int(width))
-        h = max(100, int(height))
+        w = max(200, int(width))
+        h = max(120, int(height))
         def _resize():
             try:
                 ov.resize(w, h)
@@ -558,64 +559,23 @@ class AdviserAPI:
                 title            = "Adviser · Cronómetro",
                 url              = RUTA_OVERLAY,
                 js_api           = self,
-                width            = 300,
-                height           = 220,
+                width            = 250,
+                height           = 150,
                 resizable        = True,
-                frameless        = False,
+                frameless        = True,
                 on_top           = True,
                 background_color = "#0D1018",
             )
             self._overlay_win  = ov
             self._overlay_open = True
  
-            # Limpiar estado cuando el usuario cierra con la X nativa del OS
+            # Limpiar estado cuando el overlay se cierra.
             def _on_overlay_closed():
                 self._overlay_win  = None
                 self._overlay_open = False
-                print("[Adviser] Overlay cerrado por el usuario (X nativa).")
+                print("[Adviser] Overlay cerrado.")
  
             ov.events.closed += _on_overlay_closed
- 
-            # Forzar estilo Win32 para que el resize nativo funcione correctamente.
-            # pywebview winforms a veces crea la ventana sin WS_THICKFRAME.
-            # Lo aplicamos una vez que la ventana termina de cargar.
-            def _fix_resize():
-                try:
-                    import ctypes
-                    import ctypes.wintypes
- 
-                    FindWindowW = ctypes.windll.user32.FindWindowW
-                    FindWindowW.restype = ctypes.wintypes.HWND
-                    hwnd = FindWindowW(None, "Adviser · Cronómetro")
-                    if not hwnd:
-                        return
- 
-                    GWL_STYLE     = -16
-                    WS_THICKFRAME = 0x00040000  # bordes redimensionables
-                    WS_CAPTION    = 0x00C00000  # barra de título
-                    WS_SYSMENU    = 0x00080000  # botones min/max/cerrar
- 
-                    GetWindowLongW = ctypes.windll.user32.GetWindowLongW
-                    SetWindowLongW = ctypes.windll.user32.SetWindowLongW
-                    SetWindowPos   = ctypes.windll.user32.SetWindowPos
- 
-                    style = GetWindowLongW(hwnd, GWL_STYLE)
-                    style |= WS_THICKFRAME | WS_CAPTION | WS_SYSMENU
-                    SetWindowLongW(hwnd, GWL_STYLE, style)
- 
-                    # Forzar repintado del frame
-                    SWP_NOMOVE     = 0x0002
-                    SWP_NOSIZE     = 0x0001
-                    SWP_NOZORDER   = 0x0004
-                    SWP_FRAMECHANGED = 0x0020
-                    SetWindowPos(hwnd, 0, 0, 0, 0, 0,
-                                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED)
- 
-                    print("[Adviser] WS_THICKFRAME aplicado al overlay.")
-                except Exception as e:
-                    print(f"[Adviser] _fix_resize error: {e}")
- 
-            ov.events.loaded += _fix_resize
  
             print("[Adviser] Overlay abierto.")
         except Exception as e:

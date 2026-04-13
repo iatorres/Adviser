@@ -16,7 +16,51 @@
   <div class="loading-text">CARGANDO ADVISER...</div>
 </div>
 
-<div id="app">
+<!-- ── LANDING ────────────────────────────────────────────────────────────── -->
+<div id="landing" style="display:none;">
+  <div class="landing-bg-accent landing-bg-accent--tl"></div>
+  <div class="landing-bg-accent landing-bg-accent--br"></div>
+
+  <div class="landing-content">
+    <div class="landing-logo-wrap">
+      <div class="landing-logo-icon">A</div>
+    </div>
+    <h1 class="landing-title">ADVISER</h1>
+    <p class="landing-subtitle">Tu asistente de rutina personal</p>
+
+    <div class="landing-nav">
+      <button class="landing-nav-btn" onclick="irAPanel('rutina')">
+        <span class="landing-nav-icon">◫</span>
+        <div class="landing-nav-info">
+          <span class="landing-nav-label">Rutina diaria</span>
+          <span class="landing-nav-desc">Visualizá y editá tu rutina semanal</span>
+        </div>
+        <span class="landing-nav-arrow">→</span>
+      </button>
+      <button class="landing-nav-btn" onclick="irAPanel('cronometro')">
+        <span class="landing-nav-icon">◎</span>
+        <div class="landing-nav-info">
+          <span class="landing-nav-label">Cronómetro</span>
+          <span class="landing-nav-desc">Sesiones de tareas con tiempo límite</span>
+        </div>
+        <span class="landing-nav-arrow">→</span>
+      </button>
+      <button class="landing-nav-btn" onclick="irAPanel('config')">
+        <span class="landing-nav-icon">⚙</span>
+        <div class="landing-nav-info">
+          <span class="landing-nav-label">Configuración</span>
+          <span class="landing-nav-desc">Tema y ajustes de la aplicación</span>
+        </div>
+        <span class="landing-nav-arrow">→</span>
+      </button>
+    </div>
+
+    <div class="landing-version">v2.0 · Ian Torres</div>
+  </div>
+</div>
+
+<!-- ── APP (con sidebar) ──────────────────────────────────────────────────── -->
+<div id="app" style="display:none;">
 
   <!-- ── SIDEBAR ──────────────────────────────────────────────────────────── -->
   <aside id="sidebar">
@@ -30,6 +74,9 @@
 
     <div class="nav-section">
       <div class="nav-label">// navegación</div>
+      <button class="nav-btn" data-panel="landing" onclick="volverALanding()">
+        <span class="nav-icon">⌂</span> Inicio
+      </button>
       <button class="nav-btn active" data-panel="rutina">
         <span class="nav-icon">◫</span> Ver Rutina
       </button>
@@ -107,9 +154,8 @@
         <p>Tareas urgentes fuera de tu rutina habitual</p>
       </div>
 
-      <!-- Vista SETUP (antes de iniciar) -->
+      <!-- Vista SETUP -->
       <div id="crono-setup">
-        <!-- Tiempo límite -->
         <div class="crono-section">
           <div class="crono-section-label">// tiempo límite</div>
           <div class="crono-time-selector">
@@ -131,7 +177,6 @@
           </div>
         </div>
 
-        <!-- Agregar tareas -->
         <div class="crono-section">
           <div class="crono-section-label">// agregar tareas</div>
           <div class="crono-add-row">
@@ -143,7 +188,6 @@
           </div>
         </div>
 
-        <!-- Botón iniciar -->
         <div class="crono-start-bar">
           <button class="btn-crono-start" id="btn-crono-start" onclick="iniciarCronometro()" disabled>
             ▶ Iniciar sesión
@@ -151,10 +195,8 @@
         </div>
       </div>
 
-      <!-- Vista RUNNING (cronómetro activo) -->
+      <!-- Vista RUNNING -->
       <div id="crono-running" style="display:none; flex-direction:column; flex:1; overflow:hidden;">
-
-        <!-- Display del tiempo -->
         <div class="crono-display-wrap">
           <div class="crono-ring-container">
             <svg class="crono-ring-svg" viewBox="0 0 120 120">
@@ -174,10 +216,8 @@
           </div>
         </div>
 
-        <!-- Lista de tareas activa (scrollable) -->
         <div class="crono-running-lista-wrap">
           <div class="crono-section-label" style="padding: 0 32px; margin-bottom:8px;">// tareas de la sesión</div>
-          <!-- Agregar tarea mientras corre -->
           <div class="crono-add-row crono-add-row-running">
             <input type="text" id="crono-nueva-tarea-running" class="crono-task-input" placeholder="Agregar tarea en curso..." maxlength="120" onkeydown="if(event.key==='Enter') agregarTareaRunning()">
             <button class="crono-add-btn" onclick="agregarTareaRunning()">+</button>
@@ -185,7 +225,6 @@
           <div id="crono-running-lista" class="crono-running-lista"></div>
         </div>
 
-        <!-- Barra inferior de acciones -->
         <div class="crono-action-bar">
           <button class="btn-crono-finish" id="btn-crono-finish" onclick="finalizarSesion()" disabled>
             ✓ Finalizar sesión
@@ -196,7 +235,7 @@
         </div>
       </div>
 
-      <!-- Vista RESUMEN (al finalizar) -->
+      <!-- Vista RESUMEN -->
       <div id="crono-resumen" style="display:none; flex-direction:column; flex:1; overflow:hidden;">
         <div class="crono-resumen-content">
           <div class="crono-resumen-icon" id="crono-resumen-icon">✓</div>

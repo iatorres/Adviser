@@ -71,12 +71,248 @@
   ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 99px; }
   ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.20); }
 
+  /* ══════════════════════════════════════════════════════════════════════════
+     LANDING PAGE
+  ══════════════════════════════════════════════════════════════════════════ */
+
+  #landing {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 20% 20%, rgba(203,60,255,0.10), transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(92,251,216,0.07), transparent 50%),
+                var(--bg);
+    z-index: 50;
+    overflow: hidden;
+    animation: landingFadeIn 400ms ease both;
+  }
+
+  #landing.leaving {
+    animation: landingFadeOut 300ms ease both;
+  }
+
+  @keyframes landingFadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  @keyframes landingFadeOut {
+    from { opacity: 1; transform: scale(1); }
+    to   { opacity: 0; transform: scale(0.97); }
+  }
+
+  .landing-bg-accent {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    opacity: 0.5;
+  }
+
+  .landing-bg-accent--tl {
+    width: 500px; height: 500px;
+    top: -180px; left: -160px;
+    background: radial-gradient(circle, rgba(203,60,255,0.12), transparent 70%);
+  }
+
+  .landing-bg-accent--br {
+    width: 420px; height: 420px;
+    bottom: -140px; right: -100px;
+    background: radial-gradient(circle, rgba(92,251,216,0.10), transparent 70%);
+  }
+
+  .landing-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    position: relative;
+    z-index: 1;
+    animation: landingContentUp 500ms cubic-bezier(0.34,1.1,0.64,1) both;
+  }
+
+  @keyframes landingContentUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .landing-logo-wrap {
+    margin-bottom: 20px;
+    animation: landingLogoIn 600ms cubic-bezier(0.34,1.4,0.64,1) both;
+  }
+
+  @keyframes landingLogoIn {
+    from { opacity: 0; transform: scale(0.6); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  .landing-logo-icon {
+    width: 72px; height: 72px;
+    background: var(--accent-glow);
+    border: 1.5px solid var(--accent);
+    border-radius: 20px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono);
+    font-size: 32px;
+    color: var(--accent);
+    font-weight: 700;
+    box-shadow: 0 0 40px var(--accent-glow), 0 0 80px rgba(203,60,255,0.08);
+  }
+
+  .landing-title {
+    font-family: var(--mono);
+    font-size: 64px;
+    font-weight: 700;
+    color: var(--text1);
+    letter-spacing: 0.18em;
+    line-height: 1;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, var(--text1) 40%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  [data-theme="light"] .landing-title {
+    background: linear-gradient(135deg, #0E1120 40%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+
+  .landing-subtitle {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text3);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 52px;
+  }
+
+  /* Botones de navegación */
+  .landing-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 420px;
+  }
+
+  .landing-nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 18px 22px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    text-align: left;
+    transition: background var(--transition), border-color var(--transition), transform 160ms ease;
+    position: relative;
+    overflow: hidden;
+    animation: landingBtnIn 500ms cubic-bezier(0.34,1.1,0.64,1) both;
+  }
+
+  .landing-nav-btn:nth-child(1) { animation-delay: 80ms; }
+  .landing-nav-btn:nth-child(2) { animation-delay: 150ms; }
+  .landing-nav-btn:nth-child(3) { animation-delay: 220ms; }
+
+  @keyframes landingBtnIn {
+    from { opacity: 0; transform: translateX(-16px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  .landing-nav-btn::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--accent);
+    opacity: 0;
+    transition: opacity var(--transition);
+    border-radius: 0 2px 2px 0;
+  }
+
+  .landing-nav-btn:hover {
+    background: var(--bg3);
+    border-color: rgba(203,60,255,0.30);
+    transform: translateX(3px);
+  }
+
+  .landing-nav-btn:hover::before { opacity: 1; }
+
+  .landing-nav-btn:active { transform: translateX(1px) scale(0.99); }
+
+  .landing-nav-icon {
+    font-size: 22px;
+    color: var(--accent);
+    flex-shrink: 0;
+    width: 28px;
+    text-align: center;
+  }
+
+  .landing-nav-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .landing-nav-label {
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text1);
+    display: block;
+  }
+
+  .landing-nav-desc {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.04em;
+    display: block;
+  }
+
+  .landing-nav-arrow {
+    font-size: 16px;
+    color: var(--text3);
+    flex-shrink: 0;
+    transition: color var(--transition), transform var(--transition);
+  }
+
+  .landing-nav-btn:hover .landing-nav-arrow {
+    color: var(--accent);
+    transform: translateX(3px);
+  }
+
+  .landing-version {
+    margin-top: 40px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 0.10em;
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     APP LAYOUT
+  ══════════════════════════════════════════════════════════════════════════ */
+
   #app {
     display: flex;
     height: 100vh;
     overflow: hidden;
     padding: 20px;
     gap: 18px;
+  }
+
+  #app.entering {
+    animation: appFadeIn 350ms cubic-bezier(0.35,0,0.25,1) both;
+  }
+
+  @keyframes appFadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
   #app::before {
@@ -405,7 +641,6 @@
      CRONÓMETRO DE TAREAS
   ═══════════════════════════════════════════════════════════════════════════ */
 
-  /* Setup view */
   #crono-setup {
     flex: 1;
     overflow-y: auto;
@@ -416,9 +651,7 @@
     will-change: transform;
   }
 
-  .crono-section {
-    margin-top: 20px;
-  }
+  .crono-section { margin-top: 20px; }
 
   .crono-section-label {
     font-family: var(--mono);
@@ -430,13 +663,7 @@
     margin-bottom: 10px;
   }
 
-  /* Botones de tiempo predefinido */
-  .crono-time-selector {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 12px;
-  }
+  .crono-time-selector { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 
   .crono-time-btn {
     padding: 7px 14px;
@@ -453,14 +680,7 @@
   .crono-time-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
   .crono-time-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); box-shadow: 0 0 10px var(--accent-glow); }
 
-  /* Input custom */
-  .crono-custom-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-  }
-
+  .crono-custom-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
   .crono-custom-label { font-size: 11px; color: var(--text2); white-space: nowrap; }
 
   .crono-custom-input {
@@ -492,22 +712,10 @@
   }
   .crono-custom-set:hover { border-color: var(--accent); color: var(--accent); }
 
-  .crono-tiempo-selected {
-    font-size: 12px;
-    color: var(--text2);
-  }
+  .crono-tiempo-selected { font-size: 12px; color: var(--text2); }
 
-  /* Add task row */
-  .crono-add-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 10px;
-  }
-
-  .crono-add-row-running {
-    padding: 0 32px;
-    margin-bottom: 8px;
-  }
+  .crono-add-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .crono-add-row-running { padding: 0 32px; margin-bottom: 8px; }
 
   .crono-task-input {
     flex: 1;
@@ -539,13 +747,7 @@
   }
   .crono-add-btn:hover { background: var(--accent-glow2); }
 
-  /* Lista setup */
-  .crono-setup-lista {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-height: 60px;
-  }
+  .crono-setup-lista { display: flex; flex-direction: column; gap: 4px; min-height: 60px; }
 
   .crono-empty-hint {
     font-size: 12px;
@@ -557,7 +759,6 @@
     border-radius: var(--radius);
   }
 
-  /* Item de tarea en setup */
   .crono-setup-item {
     display: flex;
     align-items: center;
@@ -574,46 +775,25 @@
     to   { opacity: 1; transform: translateX(0); }
   }
 
-  .crono-setup-item-num {
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--text3);
-    width: 18px;
-    flex-shrink: 0;
-  }
-
-  .crono-setup-item-text {
-    flex: 1;
-    font-size: 13px;
-    color: var(--text1);
-  }
+  .crono-setup-item-num { font-family: var(--mono); font-size: 10px; color: var(--text3); width: 18px; flex-shrink: 0; }
+  .crono-setup-item-text { flex: 1; font-size: 13px; color: var(--text1); }
 
   .crono-setup-item-del {
-    background: none;
-    border: none;
-    color: var(--text3);
-    cursor: pointer;
-    font-size: 14px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    transition: color var(--transition), background var(--transition);
-    line-height: 1;
+    background: none; border: none; color: var(--text3); cursor: pointer;
+    font-size: 14px; padding: 2px 6px; border-radius: 4px;
+    transition: color var(--transition), background var(--transition); line-height: 1;
   }
   .crono-setup-item-del:hover { color: var(--red); background: var(--red-glow); }
 
-  /* Botón iniciar */
   .crono-start-bar { padding: 16px 0 4px; }
 
   .btn-crono-start {
-    width: 100%;
-    padding: 14px;
+    width: 100%; padding: 14px;
     background: var(--green-glow);
     border: 1px solid var(--green);
     border-radius: var(--radius);
     color: var(--green);
-    font-family: var(--sans);
-    font-size: 14px;
-    font-weight: 700;
+    font-family: var(--sans); font-size: 14px; font-weight: 700;
     cursor: pointer;
     transition: background var(--transition), box-shadow var(--transition), opacity var(--transition);
     letter-spacing: 0.04em;
@@ -626,197 +806,78 @@
 
   .crono-display-wrap {
     padding: 20px 32px 16px;
-    display: flex;
-    align-items: center;
-    gap: 28px;
-    flex-shrink: 0;
-    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 28px;
+    flex-shrink: 0; border-bottom: 1px solid var(--border);
   }
 
-  /* Anillo circular SVG */
-  .crono-ring-container {
-    position: relative;
-    width: 100px;
-    height: 100px;
-    flex-shrink: 0;
-  }
-
-  .crono-ring-svg {
-    width: 100px;
-    height: 100px;
-    transform: rotate(-90deg);
-  }
-
-  .crono-ring-bg {
-    fill: none;
-    stroke: var(--border2);
-    stroke-width: 6;
-  }
-
+  .crono-ring-container { position: relative; width: 100px; height: 100px; flex-shrink: 0; }
+  .crono-ring-svg { width: 100px; height: 100px; transform: rotate(-90deg); }
+  .crono-ring-bg { fill: none; stroke: var(--border2); stroke-width: 6; }
   .crono-ring-fill {
-    fill: none;
-    stroke: var(--green);
-    stroke-width: 6;
-    stroke-linecap: round;
-    stroke-dasharray: 326.7;   /* 2π × 52 */
-    stroke-dashoffset: 0;
+    fill: none; stroke: var(--green); stroke-width: 6; stroke-linecap: round;
+    stroke-dasharray: 326.7; stroke-dashoffset: 0;
     transition: stroke-dashoffset 1s linear, stroke 0.5s ease;
     filter: drop-shadow(0 0 6px var(--green));
   }
-
   .crono-ring-fill.warning { stroke: var(--orange); filter: drop-shadow(0 0 6px var(--orange)); }
-  .crono-ring-fill.danger  { stroke: var(--red);    filter: drop-shadow(0 0 8px var(--red)); animation: danger-pulse 1s infinite; }
+  .crono-ring-fill.danger  { stroke: var(--red); filter: drop-shadow(0 0 8px var(--red)); animation: danger-pulse 1s infinite; }
 
-  @keyframes danger-pulse {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0.5; }
-  }
+  @keyframes danger-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
   .crono-time-display {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: var(--mono);
-    font-size: 18px;
-    font-weight: 700;
-    color: var(--text1);
-    letter-spacing: 0.05em;
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 18px; font-weight: 700; color: var(--text1); letter-spacing: 0.05em;
   }
 
-  .crono-session-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
+  .crono-session-info { flex: 1; display: flex; flex-direction: column; gap: 10px; }
 
   .crono-tasks-counter {
-    font-family: var(--mono);
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--text1);
-    display: flex;
-    align-items: baseline;
-    gap: 6px;
+    font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--text1);
+    display: flex; align-items: baseline; gap: 6px;
   }
 
-  .crono-tasks-label {
-    font-size: 11px;
-    font-weight: 400;
-    color: var(--text2);
-  }
+  .crono-tasks-label { font-size: 11px; font-weight: 400; color: var(--text2); }
 
-  .crono-progress-bar-wrap {
-    height: 4px;
-    background: var(--border2);
-    border-radius: 99px;
-    overflow: hidden;
-  }
-
+  .crono-progress-bar-wrap { height: 4px; background: var(--border2); border-radius: 99px; overflow: hidden; }
   .crono-progress-bar {
-    height: 100%;
-    background: var(--green);
-    border-radius: 99px;
+    height: 100%; background: var(--green); border-radius: 99px;
     transition: width 300ms ease, background 0.5s ease;
     box-shadow: 0 0 8px var(--green-glow);
   }
 
-  /* Running task list */
-  .crono-running-lista-wrap {
-    flex: 1;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    padding-top: 14px;
-  }
+  .crono-running-lista-wrap { flex: 1; overflow: hidden; display: flex; flex-direction: column; padding-top: 14px; }
+  .crono-running-lista { flex: 1; overflow-y: auto; padding: 0 32px 8px; display: flex; flex-direction: column; gap: 4px; }
 
-  .crono-running-lista {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0 32px 8px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  /* Item de tarea en running */
   .crono-run-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+    display: flex; align-items: center; gap: 12px;
     padding: 11px 16px;
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    cursor: pointer;
-    transition: all var(--transition);
-    user-select: none;
+    background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+    cursor: pointer; transition: all var(--transition); user-select: none;
     animation: slideIn 120ms ease;
   }
-
   .crono-run-item:hover { border-color: var(--border2); background: var(--bg3); }
-
-  .crono-run-item.done {
-    background: var(--green-glow);
-    border-color: var(--green);
-    opacity: 0.7;
-  }
+  .crono-run-item.done { background: var(--green-glow); border-color: var(--green); opacity: 0.7; }
 
   .crono-run-item-check {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    border: 2px solid var(--border2);
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    color: transparent;
-    transition: all var(--transition);
+    width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border2);
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: transparent; transition: all var(--transition);
   }
+  .crono-run-item.done .crono-run-item-check { background: var(--green); border-color: var(--green); color: var(--bg); }
+  .crono-run-item-text { flex: 1; font-size: 13px; color: var(--text1); transition: color var(--transition); }
+  .crono-run-item.done .crono-run-item-text { text-decoration: line-through; color: var(--text2); }
 
-  .crono-run-item.done .crono-run-item-check {
-    background: var(--green);
-    border-color: var(--green);
-    color: var(--bg);
-  }
-
-  .crono-run-item-text {
-    flex: 1;
-    font-size: 13px;
-    color: var(--text1);
-    transition: color var(--transition);
-  }
-
-  .crono-run-item.done .crono-run-item-text {
-    text-decoration: line-through;
-    color: var(--text2);
-  }
-
-  /* Action bar */
   .crono-action-bar {
-    padding: 12px 32px 20px;
-    display: flex;
-    gap: 10px;
-    flex-shrink: 0;
-    border-top: 1px solid var(--border);
+    padding: 12px 32px 20px; display: flex; gap: 10px;
+    flex-shrink: 0; border-top: 1px solid var(--border);
   }
 
   .btn-crono-finish {
-    flex: 1;
-    padding: 12px;
-    background: var(--green-glow);
-    border: 1px solid var(--green);
-    border-radius: var(--radius);
-    color: var(--green);
-    font-family: var(--sans);
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background var(--transition), box-shadow var(--transition), opacity var(--transition);
+    flex: 1; padding: 12px;
+    background: var(--green-glow); border: 1px solid var(--green); border-radius: var(--radius);
+    color: var(--green); font-family: var(--sans); font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: background var(--transition), box-shadow var(--transition), opacity var(--transition);
     letter-spacing: 0.04em;
   }
   .btn-crono-finish:not(:disabled):hover { background: var(--green-glow2); box-shadow: 0 0 16px var(--green-glow); }
@@ -824,130 +885,56 @@
 
   .btn-crono-cancel {
     padding: 12px 20px;
-    background: var(--red-glow);
-    border: 1px solid rgba(255,68,88,0.3);
-    border-radius: var(--radius);
-    color: var(--red);
-    font-family: var(--sans);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background var(--transition);
-    letter-spacing: 0.02em;
+    background: var(--red-glow); border: 1px solid rgba(255,68,88,0.3); border-radius: var(--radius);
+    color: var(--red); font-family: var(--sans); font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: background var(--transition); letter-spacing: 0.02em;
   }
   .btn-crono-cancel:hover { background: rgba(255,68,88,0.15); }
 
   /* ── Resumen ───────────────────────────────────────────────────────────── */
-  #crono-resumen {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    overflow: hidden;
-    align-items: center;
-    justify-content: center;
-  }
+  #crono-resumen { display: flex; flex-direction: column; flex: 1; overflow: hidden; align-items: center; justify-content: center; }
 
-  .crono-resumen-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    padding: 40px 32px;
-    text-align: center;
-  }
+  .crono-resumen-content { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 40px 32px; text-align: center; }
 
-  .crono-resumen-icon {
-    font-size: 48px;
-    line-height: 1;
-    animation: popIn 400ms cubic-bezier(0.34,1.56,0.64,1);
-  }
+  .crono-resumen-icon { font-size: 48px; line-height: 1; animation: popIn 400ms cubic-bezier(0.34,1.56,0.64,1); }
 
-  @keyframes popIn {
-    from { opacity: 0; transform: scale(0.4); }
-    to   { opacity: 1; transform: scale(1); }
-  }
+  @keyframes popIn { from { opacity: 0; transform: scale(0.4); } to { opacity: 1; transform: scale(1); } }
 
-  .crono-resumen-titulo {
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--text1);
-    letter-spacing: -0.02em;
-  }
+  .crono-resumen-titulo { font-size: 22px; font-weight: 700; color: var(--text1); letter-spacing: -0.02em; }
+  .crono-resumen-sub { font-size: 13px; color: var(--text2); max-width: 320px; }
 
-  .crono-resumen-sub {
-    font-size: 13px;
-    color: var(--text2);
-    max-width: 320px;
-  }
+  .crono-resumen-stats { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; justify-content: center; }
 
-  .crono-resumen-stats {
-    display: flex;
-    gap: 12px;
-    margin-top: 8px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .crono-stat-chip {
-    padding: 8px 16px;
-    border-radius: 999px;
-    font-family: var(--mono);
-    font-size: 11px;
-    font-weight: 600;
-  }
-
-  .crono-stat-chip.green { background: var(--green-glow2); color: var(--green); border: 1px solid var(--green); }
+  .crono-stat-chip { padding: 8px 16px; border-radius: 999px; font-family: var(--mono); font-size: 11px; font-weight: 600; }
+  .crono-stat-chip.green  { background: var(--green-glow2); color: var(--green); border: 1px solid var(--green); }
   .crono-stat-chip.accent { background: var(--accent-glow); color: var(--accent); border: 1px solid var(--accent); }
   .crono-stat-chip.orange { background: var(--orange-glow); color: var(--orange); border: 1px solid var(--orange); }
 
   .btn-crono-nueva {
-    margin-top: 12px;
-    padding: 12px 32px;
-    background: var(--accent-glow);
-    border: 1px solid var(--accent);
-    border-radius: var(--radius);
-    color: var(--accent);
-    font-family: var(--sans);
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background var(--transition), box-shadow var(--transition);
-    letter-spacing: 0.04em;
+    margin-top: 12px; padding: 12px 32px;
+    background: var(--accent-glow); border: 1px solid var(--accent); border-radius: var(--radius);
+    color: var(--accent); font-family: var(--sans); font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: background var(--transition), box-shadow var(--transition); letter-spacing: 0.04em;
   }
   .btn-crono-nueva:hover { background: var(--accent-glow2); box-shadow: 0 0 20px var(--accent-glow); }
 
   /* ── Alarm overlay ─────────────────────────────────────────────────────── */
   #alarm-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(8, 10, 15, 0.85);
-    backdrop-filter: blur(6px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 500;
-    animation: fadeIn 200ms ease;
+    position: fixed; inset: 0;
+    background: rgba(8, 10, 15, 0.85); backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 500; animation: fadeIn 200ms ease;
   }
 
   .alarm-box {
-    background: var(--bg2);
-    border: 1px solid var(--red);
-    border-radius: 16px;
-    padding: 40px 48px;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
+    background: var(--bg2); border: 1px solid var(--red); border-radius: 16px;
+    padding: 40px 48px; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
     box-shadow: 0 0 60px rgba(255,68,88,0.25);
-    animation: popIn 400ms cubic-bezier(0.34,1.56,0.64,1);
-    max-width: 340px;
+    animation: popIn 400ms cubic-bezier(0.34,1.56,0.64,1); max-width: 340px;
   }
 
-  .alarm-icon {
-    font-size: 52px;
-    animation: shake 0.5s infinite;
-  }
+  .alarm-icon { font-size: 52px; animation: shake 0.5s infinite; }
 
   @keyframes shake {
     0%, 100% { transform: rotate(0deg); }
@@ -957,31 +944,13 @@
     80%       { transform: rotate(8deg); }
   }
 
-  .alarm-titulo {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--red);
-    letter-spacing: -0.01em;
-  }
-
-  .alarm-sub {
-    font-size: 13px;
-    color: var(--text2);
-    line-height: 1.5;
-  }
+  .alarm-titulo { font-size: 20px; font-weight: 700; color: var(--red); letter-spacing: -0.01em; }
+  .alarm-sub { font-size: 13px; color: var(--text2); line-height: 1.5; }
 
   .alarm-btn {
-    margin-top: 8px;
-    padding: 11px 32px;
-    background: var(--red-glow);
-    border: 1px solid var(--red);
-    border-radius: var(--radius);
-    color: var(--red);
-    font-family: var(--sans);
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background var(--transition);
-    letter-spacing: 0.04em;
+    margin-top: 8px; padding: 11px 32px;
+    background: var(--red-glow); border: 1px solid var(--red); border-radius: var(--radius);
+    color: var(--red); font-family: var(--sans); font-size: 13px; font-weight: 700;
+    cursor: pointer; transition: background var(--transition); letter-spacing: 0.04em;
   }
   .alarm-btn:hover { background: rgba(255,68,88,0.18); }

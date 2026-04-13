@@ -10,10 +10,56 @@ let state = {
   horaActual:  0,
   asistente:   false,
   tema:        "dark",
+  appIniciada: false,
 };
 
+// ── Navegación landing → app ──────────────────────────────────────────────────
+function irAPanel(panel) {
+  const landing = document.getElementById('landing');
+  const app     = document.getElementById('app');
+
+  landing.classList.add('leaving');
+
+  setTimeout(() => {
+    landing.style.display = 'none';
+    app.style.display = 'flex';
+    app.classList.add('entering');
+
+    // Activar el panel correcto en la sidebar
+    document.querySelectorAll('.nav-btn[data-panel]').forEach(b => {
+      b.classList.toggle('active', b.dataset.panel === panel);
+    });
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    const target = document.getElementById(`panel-${panel}`);
+    if (target) target.classList.add('active');
+
+    // Si los datos ya están cargados, no hace falta volver a inicializar
+    if (!state.appIniciada) {
+      _inicializarApp();
+    }
+
+    setTimeout(() => app.classList.remove('entering'), 400);
+  }, 280);
+}
+
+function volverALanding() {
+  const landing = document.getElementById('landing');
+  const app     = document.getElementById('app');
+
+  app.style.display = 'none';
+  landing.classList.remove('leaving');
+  landing.style.display = 'flex';
+  // Re-trigger animation
+  void landing.offsetWidth;
+  landing.style.animation = 'none';
+  setTimeout(() => { landing.style.animation = ''; }, 10);
+}
+
 // ── Inicialización ────────────────────────────────────────────────────────────
-window.addEventListener('pywebviewready', async () => {
+async function _inicializarApp() {
+  state.appIniciada = true;
+  if (!window.pywebview) return;
+
   const api = window.pywebview.api;
   const [estado, rutina] = await Promise.all([
     api.get_estado_inicial(),
@@ -36,20 +82,38 @@ window.addEventListener('pywebviewready', async () => {
   buildEditList();
   updateAsistenteUI();
   startClock();
+}
 
+window.addEventListener('pywebviewready', () => {
+  // Mostrar la landing apenas pywebview esté listo
+  const loading = document.getElementById('loading');
+  loading.classList.add('hidden');
   setTimeout(() => {
-    const l = document.getElementById('loading');
-    l.classList.add('hidden');
-    setTimeout(() => l.remove(), 300);
-  }, 200);
+    loading.remove();
+    document.getElementById('landing').style.display = 'flex';
+  }, 300);
+
+  // Aplicar tema guardado si existe
+  if (window.pywebview) {
+    window.pywebview.api.get_estado_inicial().then(estado => {
+      if (estado.tema) {
+        state.tema = estado.tema;
+        aplicarTema(estado.tema);
+      }
+    });
+  }
 });
 
 window.addEventListener('DOMContentLoaded', () => {
   if (!window.pywebview) {
+    // Modo browser: mostrar landing directamente
     const t = localStorage.getItem('adviser_tema') || 'dark';
     state.tema = t;
     aplicarTema(t);
-    setTimeout(() => document.getElementById('loading')?.remove(), 500);
+    setTimeout(() => {
+      document.getElementById('loading')?.remove();
+      document.getElementById('landing').style.display = 'flex';
+    }, 500);
   }
 });
 
@@ -75,7 +139,8 @@ function onTemaChange(isDark) {
 function startClock() {
   function tick() {
     const now = new Date();
-    document.getElementById('status-time').textContent =
+    const el = document.getElementById('status-time');
+    if (el) el.textContent =
       `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
     const nuevaHora = now.getHours();
     const nuevoDia  = DIAS[now.getDay() === 0 ? 6 : now.getDay() - 1];
@@ -204,6 +269,7 @@ function updateAsistenteUI() {
   const dot  = document.getElementById('status-dot');
   const text = document.getElementById('status-text');
   const btn  = document.getElementById('btn-toggle');
+  if (!dot || !text || !btn) return;
   if (state.asistente) {
     dot.classList.add('active'); text.textContent = 'Activo'; text.classList.add('active');
     btn.textContent = '■ Detener asistente'; btn.classList.add('running');
@@ -215,8 +281,9 @@ function updateAsistenteUI() {
 
 window._onAsistenteHora = (hora) => { state.horaActual = hora; refreshHoraActual(); };
 
-// ── Navegación ────────────────────────────────────────────────────────────────
+// ── Navegación interna (sidebar) ──────────────────────────────────────────────
 document.querySelectorAll('.nav-btn[data-panel]').forEach(btn => {
+  if (btn.dataset.panel === 'landing') return; // manejado por volverALanding()
   btn.addEventListener('click', () => {
     const target = btn.dataset.panel;
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -323,14 +390,11 @@ async function iniciarCronometro() {
 }
 
 // ── Callbacks desde Python ────────────────────────────────────────────────────
-
-// Tick cada segundo (Python lleva el tiempo real)
 window._cronoPythonTick = function(segsRestantes) {
   crono.segsRestantes = segsRestantes;
   actualizarDisplay();
 };
 
-// Tiempo agotado
 window._cronoTiempoAgotado = function() {
   crono.segsRestantes = 0;
   if (crono.timerID) { clearInterval(crono.timerID); crono.timerID = null; }
@@ -349,7 +413,6 @@ window._cronoTiempoAgotado = function() {
   });
 };
 
-// Fallback tick JS (browser sin pywebview)
 function _tickJS() {
   crono.segsRestantes--;
   if (crono.segsRestantes <= 0) {
@@ -408,14 +471,12 @@ async function agregarTareaRunning() {
   const input = document.getElementById('crono-nueva-tarea-running');
   const texto = input.value.trim();
   if (!texto) return;
- 
+
   if (window.pywebview) {
-    // Python agrega la tarea y notifica al overlay en un solo paso
     const res = await window.pywebview.api.crono_agregar_tarea(texto);
     if (!res.ok) return;
   }
- 
-  // Actualizar UI local
+
   crono.tareas.push({ texto, done: false });
   input.value = '';
   document.getElementById('crono-total-count').textContent = crono.tareas.length;

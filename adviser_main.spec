@@ -9,7 +9,6 @@ a = Analysis(
     datas=[
         ('ui.html',             '.'),
         ('overlay.html',        '.'),   # ← tu overlay nuevo
-        ('rutina_overlay.html', '.'),
         ('style.css',           '.'),
         ('script.js',           '.'),
         ('icon.png',            '.'),

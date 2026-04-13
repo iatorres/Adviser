@@ -77,7 +77,6 @@ RUTA_ICON           = os.path.join(_app_path, "icon.png")
 RUTA_CONFIG         = os.path.join(_app_path, "config.json")
 RUTA_HTML           = _ruta_web("ui.html")
 RUTA_OVERLAY        = _ruta_web("overlay.html")
-RUTA_RUTINA_OVERLAY = _ruta_web("rutina_overlay.html")
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -151,11 +150,8 @@ class AdviserAPI:
         self._overlay_win  = None
         self._overlay_open = False
 
-        # Overlay de rutina (recordatorio de tarea actual)
         self._window_minimized    = False   # True cuando está minimizada
         self._window_closing      = False   # True cuando se está cerrando (no abrir overlay)
-        self._rutina_overlay_win   = None
-        self._rutina_overlay_datos = {"hora_str": "--:00", "titulo": "", "mensaje": ""}
 
     # ═════════════════════════════════════════════════════════════════════════
     #  RUTINA
@@ -235,31 +231,11 @@ class AdviserAPI:
                 except Exception:
                     pass
 
-            # 3. Guardar datos de la tarea actual para el overlay
-            hora_str = f"{str(hora).zfill(2)}:00"
-            self._rutina_overlay_datos = {
-                "hora_str": hora_str,
-                "titulo":   titulo,
-                "mensaje":  mensaje,
-            }
-
-            # 4. Esperar 4s y abrir el overlay SOLO si la app está minimizada
-            def _abrir_si_minimizada():
-                if self._window_minimized:
-                    _main_queue.put(self._crear_rutina_overlay)
-
-            t = threading.Timer(4.0, _abrir_si_minimizada)
-            t.daemon = True
-            t.start()
-
             espera = 3600 - (minuto * 60 + segundo)
             for _ in range(espera + 2):
                 if not self.running_flag[0]:
                     break
                 time.sleep(1)
-
-            # 5. Al cumplirse la hora → cerrar el overlay (ya llega uno nuevo)
-            _main_queue.put(self._destruir_rutina_overlay)
 
     # ═════════════════════════════════════════════════════════════════════════
     #  CRONÓMETRO
@@ -394,68 +370,7 @@ class AdviserAPI:
     
 
 
-    # ═════════════════════════════════════════════════════════════════════════
-    #  OVERLAY DE RUTINA — llamado desde rutina_overlay.html
-    # ═════════════════════════════════════════════════════════════════════════
-    def rutina_overlay_get_datos(self):
-        """El overlay de rutina solicita sus datos al abrirse."""
-        return {
-            **self._rutina_overlay_datos,
-            "tema": self.config.get("tema", "dark"),
-        }
 
-    def rutina_overlay_cerrar(self):
-        """El usuario cerró el overlay de rutina."""
-        _main_queue.put(self._destruir_rutina_overlay)
-        return {"ok": True}
-
-    def rutina_overlay_abrir_app(self):
-        """El usuario pulsó 'Abrir Adviser' en el overlay de rutina."""
-        if self._window:
-            try:
-                self._window.restore()
-            except Exception:
-                pass
-        _main_queue.put(self._destruir_rutina_overlay)
-        return {"ok": True}
-
-    def _crear_rutina_overlay(self):
-        """Crea la ventana del overlay de rutina. SOLO desde el hilo principal."""
-        # Si ya hay uno abierto, destruirlo primero (nueva hora, nuevo overlay)
-        if self._rutina_overlay_win is not None:
-            try:
-                self._rutina_overlay_win.destroy()
-            except Exception:
-                pass
-            self._rutina_overlay_win = None
-
-        try:
-            ov = webview.create_window(
-                title            = "Adviser Rutina",
-                url              = RUTA_RUTINA_OVERLAY,
-                js_api           = self,
-                width            = 320,
-                height           = 110,
-                resizable        = False,
-                frameless        = True,
-                on_top           = True,
-                background_color = "#080A0F",
-                shadow           = True,
-            )
-            self._rutina_overlay_win = ov
-            print(f"[Adviser] Overlay rutina abierto: {self._rutina_overlay_datos['hora_str']}")
-        except Exception as e:
-            print(f"[Adviser] Error al crear overlay rutina: {e}")
-
-    def _destruir_rutina_overlay(self):
-        """Destruye el overlay de rutina. SOLO desde el hilo principal."""
-        if self._rutina_overlay_win is not None:
-            try:
-                self._rutina_overlay_win.destroy()
-            except Exception:
-                pass
-            self._rutina_overlay_win = None
-            print("[Adviser] Overlay rutina cerrado.")
 
     # ═════════════════════════════════════════════════════════════════════════
     #  DETECCIÓN DE ESTADO DE VENTANA (polling via win32gui)
@@ -489,34 +404,9 @@ class AdviserAPI:
                 # Overlay cronómetro
                 if self._crono["activo"]:
                     _main_queue.put(self._crear_overlay)
-                # Overlay rutina — cargar tarea actual al momento de minimizar
-                if self.running_flag[0]:
-                    self._actualizar_datos_rutina_ahora()
-                    _main_queue.put(self._crear_rutina_overlay)
             else:
                 self._window_minimized = False
                 _main_queue.put(self._destruir_overlay)
-                _main_queue.put(self._destruir_rutina_overlay)
-
-    def _actualizar_datos_rutina_ahora(self):
-        """Carga la tarea de la hora actual en _rutina_overlay_datos."""
-        ahora   = datetime.now()
-        dia     = DIAS[ahora.weekday()]
-        hora    = ahora.hour
-        hora_str = f"{str(hora).zfill(2)}:00"
-        titulo  = "(Vacío)"
-        mensaje = "Sin actividad asignada"
-        if dia in self.bd and hora < len(self.bd[dia]):
-            entrada = self.bd[dia][hora]
-            if entrada and len(entrada) >= 2:
-                titulo  = entrada[0] or "(Vacío)"
-                mensaje = entrada[1] or "Sin actividad asignada"
-        self._rutina_overlay_datos = {
-            "hora_str": hora_str,
-            "titulo":   titulo,
-            "mensaje":  mensaje,
-        }
-        print(f"[Adviser] Datos rutina: {hora_str} — {titulo}")
 
     def _es_ventana_minimizada(self):
         """Devuelve True si la ventana principal está minimizada.

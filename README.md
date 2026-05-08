@@ -61,7 +61,37 @@ La app tiene cuatro secciones principales:
 
 ---
 
-## 📦 Compilar a ejecutable
+## ⚙️ ¿Cómo funciona? (Arquitectura)
+
+La aplicación utiliza una arquitectura híbrida donde Python maneja la lógica de negocio y persistencia, mientras que HTML5/CSS3/JS se encargan de la interfaz de usuario.
+
+### 🖼️ El Motor de Renderizado
+A diferencia de una web tradicional que corre en un navegador (Chrome, Firefox), **Adviser** utiliza la librería `pywebview` para crear una ventana nativa del sistema operativo:
+
+- **En Windows:** Utiliza el motor **Microsoft Edge WebView2** (basado en Chromium). 
+- **Proceso:** Python inicializa una instancia del motor web, le asigna un archivo local (`ui.html`) y lo renderiza dentro de un "wrapper" de ventana de escritorio. Esto permite tener la flexibilidad de diseño de la web con el acceso a archivos y procesos del sistema que ofrece Python.
+
+Al compilar con PyInstaller, todos los assets (.html, .js, .css, .png) se empaquetan y Python los localiza mediante rutas dinámicas (`sys._MEIPASS`).
+
+### 🔌 El Puente (Bridge)
+La comunicación se realiza mediante la librería `pywebview`:
+
+1.  **Frontend a Backend (JS → Python):**  
+    La clase `AdviserAPI` en `adviser_main.py` se expone al motor de renderizado. En JavaScript, se invocan funciones de Python de forma asíncrona mediante el objeto global:  
+    `window.pywebview.api.nombre_de_funcion(parametros)`.
+
+2.  **Backend a Frontend (Python → JS):**  
+    Cuando ocurre un evento en Python (como el tick de un cronómetro o un cambio de hora), se utiliza el método `window.evaluate_js()` para ejecutar funciones específicas en el navegador, por ejemplo:  
+    `self._window.evaluate_js("window._onAsistenteHora(14)")`.
+
+### 🧵 Concurrencia y Hilos
+- **Hilo Principal:** Reservado para la renderización de la interfaz y la creación/destrucción de ventanas (como el Overlay).
+- **Hilos Secundarios (Daemon):** El asistente de notificaciones y el bucle del cronómetro corren en hilos separados para no bloquear la interfaz.
+- **Sincronización:** Se implementó una **cola de mensajes (`queue.Queue`)**. Los hilos secundarios envían tareas de UI a esta cola, y el bucle principal las procesa cada 200ms, garantizando que `webview` no falle por llamadas desde hilos no autorizados.
+
+---
+
+## ��📦 Compilar a ejecutable
 
 ```bash
 pyinstaller adviser_main.spec

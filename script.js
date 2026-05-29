@@ -3,41 +3,26 @@ const DIAS       = ["lunes","martes","miercoles","jueves","viernes","sabado","do
 const DIAS_LABEL = ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
 
 let state = {
-  rutina:      {},
-  diaVista:    "lunes",
-  diaEditar:   "lunes",
-  diaActual:   "lunes",
-  horaActual:  0,
-  asistente:   false,
-  tema:        "dark",
-  appIniciada: false,
+  rutina: {}, diaVista: "lunes", diaEditar: "lunes",
+  diaActual: "lunes", horaActual: 0,
+  asistente: false, tema: "dark", appIniciada: false,
 };
 
-// ── Navegación landing → app ──────────────────────────────────────────────────
+// ── Navegación ────────────────────────────────────────────────────────────────
 function irAPanel(panel) {
   const landing = document.getElementById('landing');
   const app     = document.getElementById('app');
-
   landing.classList.add('leaving');
-
   setTimeout(() => {
     landing.style.display = 'none';
     app.style.display = 'flex';
     app.classList.add('entering');
-
-    // Activar el panel correcto en la sidebar
-    document.querySelectorAll('.nav-btn[data-panel]').forEach(b => {
-      b.classList.toggle('active', b.dataset.panel === panel);
-    });
+    document.querySelectorAll('.nav-btn[data-panel]').forEach(b =>
+      b.classList.toggle('active', b.dataset.panel === panel));
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     const target = document.getElementById(`panel-${panel}`);
     if (target) target.classList.add('active');
-
-    // Si los datos ya están cargados, no hace falta volver a inicializar
-    if (!state.appIniciada) {
-      _inicializarApp();
-    }
-
+    if (!state.appIniciada) _inicializarApp();
     setTimeout(() => app.classList.remove('entering'), 400);
   }, 280);
 }
@@ -45,27 +30,20 @@ function irAPanel(panel) {
 function volverALanding() {
   const landing = document.getElementById('landing');
   const app     = document.getElementById('app');
-
   app.style.display = 'none';
   landing.classList.remove('leaving');
   landing.style.display = 'flex';
-  // Re-trigger animation
   void landing.offsetWidth;
   landing.style.animation = 'none';
   setTimeout(() => { landing.style.animation = ''; }, 10);
 }
 
-// ── Inicialización ────────────────────────────────────────────────────────────
+// ── Init ──────────────────────────────────────────────────────────────────────
 async function _inicializarApp() {
   state.appIniciada = true;
   if (!window.pywebview) return;
-
   const api = window.pywebview.api;
-  const [estado, rutina] = await Promise.all([
-    api.get_estado_inicial(),
-    api.get_rutina(),
-  ]);
-
+  const [estado, rutina] = await Promise.all([api.get_estado_inicial(), api.get_rutina()]);
   state.rutina     = rutina;
   state.diaVista   = estado.dia_actual;
   state.diaEditar  = estado.dia_actual;
@@ -73,8 +51,13 @@ async function _inicializarApp() {
   state.horaActual = estado.hora_actual;
   state.asistente  = estado.asistente;
   if (estado.tema) state.tema = estado.tema;
-
   document.getElementById('fecha-str').textContent = estado.fecha_str;
+
+  const cfgUrl    = document.getElementById('cfg-ollama-url');
+  const cfgModelo = document.getElementById('cfg-ollama-modelo');
+  if (cfgUrl    && estado.ollama_url)    cfgUrl.value    = estado.ollama_url;
+  if (cfgModelo && estado.ollama_modelo) cfgModelo.value = estado.ollama_modelo;
+  _iaActualizarModelLabel(estado.ollama_url, estado.ollama_modelo);
 
   aplicarTema(state.tema);
   buildDaySelector();
@@ -85,31 +68,23 @@ async function _inicializarApp() {
 }
 
 window.addEventListener('pywebviewready', () => {
-  // Mostrar la landing apenas pywebview esté listo
   const loading = document.getElementById('loading');
   loading.classList.add('hidden');
   setTimeout(() => {
     loading.remove();
     document.getElementById('landing').style.display = 'flex';
   }, 300);
-
-  // Aplicar tema guardado si existe
   if (window.pywebview) {
     window.pywebview.api.get_estado_inicial().then(estado => {
-      if (estado.tema) {
-        state.tema = estado.tema;
-        aplicarTema(estado.tema);
-      }
+      if (estado.tema) { state.tema = estado.tema; aplicarTema(estado.tema); }
     });
   }
 });
 
 window.addEventListener('DOMContentLoaded', () => {
   if (!window.pywebview) {
-    // Modo browser: mostrar landing directamente
     const t = localStorage.getItem('adviser_tema') || 'dark';
-    state.tema = t;
-    aplicarTema(t);
+    state.tema = t; aplicarTema(t);
     setTimeout(() => {
       document.getElementById('loading')?.remove();
       document.getElementById('landing').style.display = 'flex';
@@ -129,17 +104,17 @@ function aplicarTema(tema) {
 }
 
 function onTemaChange(isDark) {
-  const nuevoTema = isDark ? 'dark' : 'light';
-  aplicarTema(nuevoTema);
-  if (window.pywebview) window.pywebview.api.guardar_tema(nuevoTema);
-  else localStorage.setItem('adviser_tema', nuevoTema);
+  const t = isDark ? 'dark' : 'light';
+  aplicarTema(t);
+  if (window.pywebview) window.pywebview.api.guardar_tema(t);
+  else localStorage.setItem('adviser_tema', t);
 }
 
 // ── Reloj ─────────────────────────────────────────────────────────────────────
 function startClock() {
   function tick() {
     const now = new Date();
-    const el = document.getElementById('status-time');
+    const el  = document.getElementById('status-time');
     if (el) el.textContent =
       `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
     const nuevaHora = now.getHours();
@@ -150,18 +125,16 @@ function startClock() {
       refreshHoraActual();
     }
   }
-  tick();
-  setInterval(tick, 1000);
+  tick(); setInterval(tick, 1000);
 }
 
-// ── Rutina (vista) ────────────────────────────────────────────────────────────
+// ── Rutina ────────────────────────────────────────────────────────────────────
 function buildHoursList() {
   const container = document.getElementById('hours-list');
   container.innerHTML = '';
   for (let h = 0; h < 24; h++) {
     const card = document.createElement('div');
-    card.className = 'hour-card';
-    card.id = `hc-${h}`;
+    card.className = 'hour-card'; card.id = `hc-${h}`;
     card.innerHTML = `
       <span class="card-time">${String(h).padStart(2,'0')}:00</span>
       <div class="card-divider"></div>
@@ -169,8 +142,7 @@ function buildHoursList() {
         <div class="card-title" id="hc-title-${h}"></div>
         <div class="card-msg"   id="hc-msg-${h}"></div>
       </div>
-      <span class="card-badge">● AHORA</span>
-    `;
+      <span class="card-badge">● AHORA</span>`;
     container.appendChild(card);
   }
   renderDia(state.diaVista);
@@ -206,7 +178,8 @@ function buildDaySelector() {
 
 function selectDia(dia) {
   state.diaVista = dia;
-  document.querySelectorAll('.day-btn').forEach((btn, i) => btn.classList.toggle('active', DIAS[i] === dia));
+  document.querySelectorAll('.day-btn').forEach((btn, i) =>
+    btn.classList.toggle('active', DIAS[i] === dia));
   renderDia(dia);
 }
 
@@ -223,8 +196,7 @@ function buildEditList() {
       <div class="edit-fields">
         <input class="edit-input title-input" id="et-${h}" type="text" placeholder="Título...">
         <input class="edit-input msg-input"   id="em-${h}" type="text" placeholder="Mensaje...">
-      </div>
-    `;
+      </div>`;
     container.appendChild(card);
   }
   cargarEditDia(state.diaEditar);
@@ -238,10 +210,7 @@ function cargarEditDia(dia) {
   }
 }
 
-function onEditDiaChange(val) {
-  state.diaEditar = val;
-  cargarEditDia(val);
-}
+function onEditDiaChange(val) { state.diaEditar = val; cargarEditDia(val); }
 
 async function guardarDia() {
   const entradas = [];
@@ -255,6 +224,27 @@ async function guardarDia() {
   if (window.pywebview) await window.pywebview.api.guardar_dia(state.diaEditar, entradas);
   if (state.diaEditar === state.diaVista) renderDia(state.diaVista);
   showToast(`Rutina del ${capitalize(state.diaEditar)} guardada ✓`);
+}
+
+// ── Config Ollama ─────────────────────────────────────────────────────────────
+async function guardarConfigOllama() {
+  const url    = document.getElementById('cfg-ollama-url').value.trim();
+  const modelo = document.getElementById('cfg-ollama-modelo').value.trim();
+  if (!url || !modelo) return;
+  if (window.pywebview) await window.pywebview.api.guardar_config_ollama(url, modelo);
+  _iaActualizarModelLabel(url, modelo);
+  showToast('Configuración de Ollama guardada ✓');
+}
+
+function _iaActualizarModelLabel(url, modelo) {
+  const label = document.getElementById('ia-model-label');
+  if (!label) return;
+  try {
+    const u = new URL(url);
+    label.textContent = `ollama · ${modelo} · ${u.host}`;
+  } catch {
+    label.textContent = `ollama · ${modelo}`;
+  }
 }
 
 // ── Asistente ─────────────────────────────────────────────────────────────────
@@ -281,9 +271,9 @@ function updateAsistenteUI() {
 
 window._onAsistenteHora = (hora) => { state.horaActual = hora; refreshHoraActual(); };
 
-// ── Navegación interna (sidebar) ──────────────────────────────────────────────
+// ── Sidebar nav ───────────────────────────────────────────────────────────────
 document.querySelectorAll('.nav-btn[data-panel]').forEach(btn => {
-  if (btn.dataset.panel === 'landing') return; // manejado por volverALanding()
+  if (btn.dataset.panel === 'landing') return;
   btn.addEventListener('click', () => {
     const target = btn.dataset.panel;
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -293,21 +283,21 @@ document.querySelectorAll('.nav-btn[data-panel]').forEach(btn => {
   });
 });
 
+// ── Tabs cronómetro / IA ──────────────────────────────────────────────────────
+function switchCronoTab(tab) {
+  const isCrono = tab === 'crono';
+  document.getElementById('crono-tab-content').style.display = isCrono ? 'flex' : 'none';
+  document.getElementById('ia-tab-content').style.display    = isCrono ? 'none' : 'flex';
+  document.getElementById('tab-crono').classList.toggle('active',  isCrono);
+  document.getElementById('tab-ia').classList.toggle('active',    !isCrono);
+  if (!isCrono) document.getElementById('ia-dot-indicator').classList.remove('has-tasks');
+}
 
 // ═════════════════════════════════════════════════════════════════════════════
-//  CRONÓMETRO DE TAREAS
+//  CRONÓMETRO
 // ═════════════════════════════════════════════════════════════════════════════
+const crono = { tiempoMin:15, tareas:[], timerID:null, segsRestantes:0, segsTotal:0, iniciado:false };
 
-const crono = {
-  tiempoMin:     15,
-  tareas:        [],
-  timerID:       null,
-  segsRestantes: 0,
-  segsTotal:     0,
-  iniciado:      false,
-};
-
-// ── Selector de tiempo ────────────────────────────────────────────────────────
 document.querySelectorAll('.crono-time-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.crono-time-btn').forEach(b => b.classList.remove('active'));
@@ -334,7 +324,6 @@ function actualizarLabelTiempo() {
     m ? `${h}h ${m}min` : `${h} hora${h !== 1 ? 's' : ''}`;
 }
 
-// ── Tareas en setup ───────────────────────────────────────────────────────────
 function agregarTareaSetup() {
   const input = document.getElementById('crono-nueva-tarea');
   const texto = input.value.trim();
@@ -345,10 +334,7 @@ function agregarTareaSetup() {
   input.focus();
 }
 
-function eliminarTareaSetup(idx) {
-  crono.tareas.splice(idx, 1);
-  renderSetupLista();
-}
+function eliminarTareaSetup(idx) { crono.tareas.splice(idx, 1); renderSetupLista(); }
 
 function renderSetupLista() {
   const lista = document.getElementById('crono-setup-lista');
@@ -362,25 +348,20 @@ function renderSetupLista() {
       <span class="crono-setup-item-num">${i + 1}.</span>
       <span class="crono-setup-item-text">${escapeHtml(t.texto)}</span>
       <button class="crono-setup-item-del" onclick="eliminarTareaSetup(${i})">✕</button>
-    </div>
-  `).join('');
+    </div>`).join('');
   document.getElementById('btn-crono-start').disabled = false;
 }
 
-// ── Iniciar sesión ────────────────────────────────────────────────────────────
 async function iniciarCronometro() {
   if (crono.tareas.length === 0) return;
-
-  crono.segsTotal     = crono.tiempoMin * 60;
+  crono.segsTotal = crono.tiempoMin * 60;
   crono.segsRestantes = crono.segsTotal;
-  crono.iniciado      = true;
-
+  crono.iniciado = true;
   if (window.pywebview) {
     await window.pywebview.api.crono_iniciar(JSON.stringify(crono.tareas), crono.segsTotal);
   } else {
     crono.timerID = setInterval(_tickJS, 1000);
   }
-
   document.getElementById('crono-setup').style.display   = 'none';
   document.getElementById('crono-running').style.display = 'flex';
   document.getElementById('crono-resumen').style.display = 'none';
@@ -389,11 +370,7 @@ async function iniciarCronometro() {
   actualizarDisplay();
 }
 
-// ── Callbacks desde Python ────────────────────────────────────────────────────
-window._cronoPythonTick = function(segsRestantes) {
-  crono.segsRestantes = segsRestantes;
-  actualizarDisplay();
-};
+window._cronoPythonTick = function(segsRestantes) { crono.segsRestantes = segsRestantes; actualizarDisplay(); };
 
 window._cronoTiempoAgotado = function() {
   crono.segsRestantes = 0;
@@ -403,12 +380,11 @@ window._cronoTiempoAgotado = function() {
   const total  = crono.tareas.length;
   if (hechas < total) document.getElementById('alarm-overlay').style.display = 'flex';
   mostrarResumen({
-    icono:  '⏰',
-    titulo: 'Tiempo agotado',
-    sub:    `Completaste ${hechas} de ${total} tareas antes de que se acabara el tiempo.`,
-    chips: [
-      { label: `${hechas}/${total} completadas`, clase: hechas === total ? 'green' : 'orange' },
-      { label: `${crono.tiempoMin}min límite`,   clase: 'accent' },
+    icono:'⏰', titulo:'Tiempo agotado',
+    sub:`Completaste ${hechas} de ${total} tareas antes de que se acabara el tiempo.`,
+    chips:[
+      { label:`${hechas}/${total} completadas`, clase: hechas===total?'green':'orange' },
+      { label:`${crono.tiempoMin}min límite`, clase:'accent' },
     ],
   });
 };
@@ -417,32 +393,27 @@ function _tickJS() {
   crono.segsRestantes--;
   if (crono.segsRestantes <= 0) {
     crono.segsRestantes = 0;
-    clearInterval(crono.timerID);
-    crono.timerID = null;
-    window._cronoTiempoAgotado();
-    return;
+    clearInterval(crono.timerID); crono.timerID = null;
+    window._cronoTiempoAgotado(); return;
   }
   actualizarDisplay();
 }
 
-// ── Display running ───────────────────────────────────────────────────────────
 function actualizarDisplay() {
   const segs = crono.segsRestantes;
-  const mm   = String(Math.floor(segs / 60)).padStart(2, '0');
-  const ss   = String(segs % 60).padStart(2, '0');
+  const mm = String(Math.floor(segs/60)).padStart(2,'0');
+  const ss = String(segs%60).padStart(2,'0');
   document.getElementById('crono-time-display').textContent = `${mm}:${ss}`;
-
-  const CIRC   = 326.7;
-  const prog   = crono.segsTotal > 0 ? segs / crono.segsTotal : 0;
-  const ring   = document.getElementById('crono-ring-fill');
+  const CIRC = 326.7;
+  const prog = crono.segsTotal > 0 ? segs / crono.segsTotal : 0;
+  const ring = document.getElementById('crono-ring-fill');
   ring.style.strokeDashoffset = CIRC * (1 - prog);
-  ring.classList.remove('warning', 'danger');
-  if (prog <= 0.15)      ring.classList.add('danger');
+  ring.classList.remove('warning','danger');
+  if (prog <= 0.15) ring.classList.add('danger');
   else if (prog <= 0.35) ring.classList.add('warning');
-
   const hechas = crono.tareas.filter(t => t.done).length;
   const total  = crono.tareas.length;
-  document.getElementById('crono-progress-bar').style.width = (total ? hechas / total * 100 : 0) + '%';
+  document.getElementById('crono-progress-bar').style.width = (total ? hechas/total*100 : 0) + '%';
   document.getElementById('btn-crono-finish').disabled = (hechas < total);
 }
 
@@ -451,41 +422,29 @@ function renderRunningLista() {
   const hechas = crono.tareas.filter(t => t.done).length;
   document.getElementById('crono-done-count').textContent = hechas;
   lista.innerHTML = crono.tareas.map((t, i) => `
-    <div class="crono-run-item ${t.done ? 'done' : ''}" onclick="toggleTarea(${i})">
-      <div class="crono-run-item-check">${t.done ? '✓' : ''}</div>
+    <div class="crono-run-item ${t.done?'done':''}" onclick="toggleTarea(${i})">
+      <div class="crono-run-item-check">${t.done?'✓':''}</div>
       <span class="crono-run-item-text">${escapeHtml(t.texto)}</span>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
 async function toggleTarea(idx) {
   crono.tareas[idx].done = !crono.tareas[idx].done;
-  renderRunningLista();
-  actualizarDisplay();
-  if (window.pywebview) {
-    await window.pywebview.api.crono_toggle_tarea(idx, crono.tareas[idx].done);
-  }
+  renderRunningLista(); actualizarDisplay();
+  if (window.pywebview) await window.pywebview.api.crono_toggle_tarea(idx, crono.tareas[idx].done);
 }
 
 async function agregarTareaRunning() {
   const input = document.getElementById('crono-nueva-tarea-running');
   const texto = input.value.trim();
   if (!texto) return;
-
-  if (window.pywebview) {
-    const res = await window.pywebview.api.crono_agregar_tarea(texto);
-    if (!res.ok) return;
-  }
-
+  if (window.pywebview) { const res = await window.pywebview.api.crono_agregar_tarea(texto); if (!res.ok) return; }
   crono.tareas.push({ texto, done: false });
   input.value = '';
   document.getElementById('crono-total-count').textContent = crono.tareas.length;
-  renderRunningLista();
-  actualizarDisplay();
-  input.focus();
+  renderRunningLista(); actualizarDisplay(); input.focus();
 }
 
-// ── Finalizar / Cancelar ──────────────────────────────────────────────────────
 async function finalizarSesion() {
   if (window.pywebview) await window.pywebview.api.crono_finalizar();
   else if (crono.timerID) { clearInterval(crono.timerID); crono.timerID = null; }
@@ -496,16 +455,12 @@ function _mostrarResumenFinal() {
   const total     = crono.tareas.length;
   const hechas    = crono.tareas.filter(t => t.done).length;
   const segsUsados = crono.segsTotal - crono.segsRestantes;
-  const min = Math.floor(segsUsados / 60), seg = segsUsados % 60;
+  const min = Math.floor(segsUsados/60), seg = segsUsados%60;
   const tiempoStr = min > 0 ? `${min}min ${String(seg).padStart(2,'0')}s` : `${seg}s`;
   mostrarResumen({
-    icono:  '✓',
-    titulo: '¡Sesión completada!',
-    sub:    hechas === total ? 'Completaste todas las tareas en tiempo.' : `Completaste ${hechas} de ${total} tareas.`,
-    chips: [
-      { label: `${hechas}/${total} tareas`, clase: 'green'  },
-      { label: `en ${tiempoStr}`,           clase: 'accent' },
-    ],
+    icono:'✓', titulo:'¡Sesión completada!',
+    sub: hechas===total ? 'Completaste todas las tareas en tiempo.' : `Completaste ${hechas} de ${total} tareas.`,
+    chips:[{ label:`${hechas}/${total} tareas`,clase:'green'},{ label:`en ${tiempoStr}`,clase:'accent'}],
   });
 }
 
@@ -516,43 +471,150 @@ async function cancelarSesion() {
   resetCrono();
 }
 
-function cerrarAlarma() {
-  document.getElementById('alarm-overlay').style.display = 'none';
-}
+function cerrarAlarma() { document.getElementById('alarm-overlay').style.display='none'; }
 
-// ── Resumen ───────────────────────────────────────────────────────────────────
 function mostrarResumen({ icono, titulo, sub, chips }) {
   document.getElementById('crono-setup').style.display   = 'none';
   document.getElementById('crono-running').style.display = 'none';
   document.getElementById('crono-resumen').style.display = 'flex';
-  document.getElementById('crono-resumen-icon').textContent  = icono;
+  document.getElementById('crono-resumen-icon').textContent   = icono;
   document.getElementById('crono-resumen-titulo').textContent = titulo;
   document.getElementById('crono-resumen-sub').textContent    = sub;
   document.getElementById('crono-resumen-stats').innerHTML = chips.map(c =>
-    `<div class="crono-stat-chip ${c.clase}">${c.label}</div>`
-  ).join('');
+    `<div class="crono-stat-chip ${c.clase}">${c.label}</div>`).join('');
 }
 
 function nuevaSesion() { resetCrono(); }
 
 function resetCrono() {
-  crono.tareas = []; crono.tiempoMin = 15;
-  crono.segsRestantes = 0; crono.segsTotal = 0; crono.iniciado = false;
-  if (crono.timerID) { clearInterval(crono.timerID); crono.timerID = null; }
-
+  crono.tareas=[]; crono.tiempoMin=15; crono.segsRestantes=0; crono.segsTotal=0; crono.iniciado=false;
+  if (crono.timerID) { clearInterval(crono.timerID); crono.timerID=null; }
   document.getElementById('crono-setup').style.display   = 'block';
   document.getElementById('crono-running').style.display = 'none';
   document.getElementById('crono-resumen').style.display = 'none';
-  document.getElementById('crono-nueva-tarea').value = '';
-  document.getElementById('crono-custom-min').value  = '';
-  document.getElementById('crono-tiempo-label').textContent = '15 minutos';
-  document.querySelectorAll('.crono-time-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
+  document.getElementById('crono-nueva-tarea').value='';
+  document.getElementById('crono-custom-min').value='';
+  document.getElementById('crono-tiempo-label').textContent='15 minutos';
+  document.querySelectorAll('.crono-time-btn').forEach((b,i) => b.classList.toggle('active',i===0));
   renderSetupLista();
-  const ring = document.getElementById('crono-ring-fill');
-  if (ring) { ring.style.strokeDashoffset = '0'; ring.classList.remove('warning','danger'); }
+  const ring=document.getElementById('crono-ring-fill');
+  if (ring) { ring.style.strokeDashoffset='0'; ring.classList.remove('warning','danger'); }
 }
 
-// ── Utilidades ────────────────────────────────────────────────────────────────
+// ═════════════════════════════════════════════════════════════════════════════
+//  ASISTENTE IA — CHAT
+// ═════════════════════════════════════════════════════════════════════════════
+const iaChat = { esperandoRespuesta: false, tareasDisponibles: [] };
+
+async function iaEnviar() {
+  const input = document.getElementById('ia-input');
+  const texto = input.value.trim();
+  if (!texto || iaChat.esperandoRespuesta) return;
+  _iaAgregarMensaje('user', texto);
+  input.value = ''; iaAutoResize(input);
+  iaChat.esperandoRespuesta = true;
+  _iaSetTyping(true); _iaSetSendEnabled(false);
+  if (window.pywebview) {
+    await window.pywebview.api.ia_enviar_mensaje(texto);
+  } else {
+    setTimeout(() => window._iaRespuesta("Demo sin pywebview.", []), 1200);
+  }
+}
+
+function iaHandleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); iaEnviar(); }
+}
+
+function iaAutoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+// Callbacks desde Python
+window._iaRespuesta = function(texto, tareasArray) {
+  _iaSetTyping(false);
+  iaChat.esperandoRespuesta = false;
+  _iaSetSendEnabled(true);
+  iaChat.tareasDisponibles = tareasArray || [];
+  _iaAgregarMensaje('assistant', texto, iaChat.tareasDisponibles);
+  if (iaChat.tareasDisponibles.length > 0)
+    document.getElementById('ia-dot-indicator').classList.add('has-tasks');
+};
+
+window._iaError = function(mensaje) {
+  _iaSetTyping(false);
+  iaChat.esperandoRespuesta = false;
+  _iaSetSendEnabled(true);
+  _iaAgregarMensaje('error', mensaje, []);
+};
+
+function _iaAgregarMensaje(rol, texto, tareas = []) {
+  const container = document.getElementById('ia-messages');
+  const wrap = document.createElement('div');
+  wrap.className = `ia-msg ia-msg--${rol}`;
+
+  if (rol === 'user') {
+    wrap.innerHTML = `<div class="ia-msg-bubble ia-msg-bubble--user">${escapeHtml(texto).replace(/\n/g,'<br>')}</div>`;
+  } else if (rol === 'error') {
+    wrap.innerHTML = `<div class="ia-msg-avatar">!</div><div class="ia-msg-bubble ia-msg-bubble--error">⚠ ${escapeHtml(texto)}</div>`;
+  } else {
+    const textoHTML = escapeHtml(texto).replace(/\n/g,'<br>');
+    const btnTareas = tareas.length > 0
+      ? `<button class="ia-send-tasks-btn" onclick="iaEnviarAlCrono()">↗ Enviar ${tareas.length} tarea${tareas.length!==1?'s':''} al cronómetro</button>`
+      : '';
+    wrap.innerHTML = `
+      <div class="ia-msg-avatar">A</div>
+      <div class="ia-msg-bubble">
+        <div class="ia-msg-text">${textoHTML}</div>
+        ${btnTareas}
+      </div>`;
+  }
+
+  container.appendChild(wrap);
+  requestAnimationFrame(() => container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' }));
+}
+
+function iaEnviarAlCrono() {
+  const tareas = iaChat.tareasDisponibles;
+  if (!tareas || tareas.length === 0) return;
+  tareas.forEach(texto => { if (texto.trim()) crono.tareas.push({ texto: texto.trim(), done: false }); });
+  renderSetupLista();
+  switchCronoTab('crono');
+  showToast(`${tareas.length} tarea${tareas.length!==1?'s':''} agregada${tareas.length!==1?'s':''} al cronómetro ✓`);
+  iaChat.tareasDisponibles = [];
+  document.querySelectorAll('.ia-send-tasks-btn').forEach(btn => {
+    btn.disabled = true;
+    btn.textContent = '✓ Tareas enviadas';
+    btn.classList.add('sent');
+  });
+}
+
+async function iaClearChat() {
+  if (iaChat.esperandoRespuesta) return;
+  const container = document.getElementById('ia-messages');
+  const welcome   = container.querySelector('.ia-msg--welcome');
+  container.innerHTML = '';
+  if (welcome) container.appendChild(welcome);
+  iaChat.tareasDisponibles = [];
+  document.getElementById('ia-dot-indicator').classList.remove('has-tasks');
+  if (window.pywebview) await window.pywebview.api.ia_limpiar_historial();
+  showToast('Historial del chat limpiado ✓');
+}
+
+function _iaSetTyping(visible) {
+  document.getElementById('ia-typing').style.display = visible ? 'flex' : 'none';
+  if (visible) {
+    const c = document.getElementById('ia-messages');
+    requestAnimationFrame(() => c.scrollTo({ top: c.scrollHeight, behavior: 'smooth' }));
+  }
+}
+
+function _iaSetSendEnabled(enabled) {
+  const btn = document.getElementById('ia-send-btn');
+  if (btn) { btn.disabled = !enabled; btn.classList.toggle('loading', !enabled); }
+}
+
+// ── Utils ─────────────────────────────────────────────────────────────────────
 function capitalize(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
 
 function escapeHtml(str) {
@@ -564,8 +626,7 @@ function escapeHtml(str) {
 let toastTimer = null;
 function showToast(msg) {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
+  t.textContent = msg; t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
 }

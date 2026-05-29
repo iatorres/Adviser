@@ -954,3 +954,72 @@
     cursor: pointer; transition: background var(--transition); letter-spacing: 0.04em;
   }
   .alarm-btn:hover { background: rgba(255,68,88,0.18); }
+
+  /* ═══════════════════════════════════════════════════════════════════════════
+   TABS del panel Cronómetro
+═══════════════════════════════════════════════════════════════════════════ */
+.crono-tabs { display:flex; gap:4px; border-bottom:1px solid var(--border); padding-bottom:0; }
+.crono-tab { display:flex; align-items:center; gap:7px; padding:9px 18px; border:none; border-bottom:2px solid transparent; background:transparent; color:var(--text3); font-family:var(--sans); font-size:13px; font-weight:600; cursor:pointer; letter-spacing:0.02em; transition:color var(--transition), border-color var(--transition); margin-bottom:-1px; border-radius:6px 6px 0 0; }
+.crono-tab:hover { color:var(--text1); }
+.crono-tab.active { color:var(--accent); border-bottom-color:var(--accent); background:var(--accent-glow); }
+.ia-dot-indicator { display:inline-block; width:7px; height:7px; border-radius:50%; background:transparent; transition:background 200ms, box-shadow 200ms; }
+.ia-dot-indicator.has-tasks { background:var(--accent); box-shadow:0 0 8px var(--accent); animation:pulse 2s infinite; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ASISTENTE IA — CHAT
+═══════════════════════════════════════════════════════════════════════════ */
+#ia-tab-content { display:flex; flex-direction:column; flex:1; overflow:hidden; animation:fadeIn 160ms ease; }
+
+.ia-status-bar { display:flex; align-items:center; justify-content:space-between; padding:10px 24px; border-bottom:1px solid var(--border); flex-shrink:0; background:rgba(255,255,255,0.02); }
+.ia-model-pill { display:flex; align-items:center; gap:7px; background:var(--bg3); border:1px solid var(--border2); border-radius:999px; padding:4px 12px 4px 10px; }
+.ia-model-dot { width:6px; height:6px; border-radius:50%; background:var(--green); box-shadow:0 0 6px var(--green); flex-shrink:0; }
+#ia-model-label { font-family:var(--mono); font-size:10px; color:var(--text2); letter-spacing:0.06em; }
+.ia-clear-btn { background:none; border:1px solid var(--border2); border-radius:6px; color:var(--text3); font-family:var(--mono); font-size:10px; padding:5px 10px; cursor:pointer; transition:color var(--transition), border-color var(--transition), background var(--transition); letter-spacing:0.06em; }
+.ia-clear-btn:hover { color:var(--text1); border-color:var(--border); background:var(--bg3); }
+
+.ia-messages { flex:1; overflow-y:auto; padding:20px 24px; display:flex; flex-direction:column; gap:14px; scroll-behavior:smooth; will-change:transform; -webkit-overflow-scrolling:touch; }
+
+.ia-msg { display:flex; align-items:flex-start; gap:10px; animation:iaMsgIn 220ms cubic-bezier(0.34,1.1,0.64,1) both; max-width:100%; }
+@keyframes iaMsgIn { from{opacity:0;transform:translateY(10px) scale(0.97);} to{opacity:1;transform:translateY(0) scale(1);} }
+.ia-msg--user { flex-direction:row-reverse; }
+
+.ia-msg-avatar { width:28px; height:28px; border-radius:50%; background:var(--accent-glow2); border:1px solid var(--accent); display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:11px; font-weight:700; color:var(--accent); flex-shrink:0; box-shadow:0 0 10px var(--accent-glow); }
+.ia-avatar-sm { width:22px; height:22px; font-size:9px; opacity:0.7; }
+
+.ia-msg-bubble { max-width:80%; background:var(--bg3); border:1px solid var(--border); border-radius:14px 14px 14px 4px; padding:12px 16px; font-size:13px; color:var(--text1); line-height:1.55; display:flex; flex-direction:column; gap:8px; }
+.ia-msg-bubble--user { background:var(--accent-glow); border-color:rgba(203,60,255,0.22); border-radius:14px 14px 4px 14px; max-width:80%; }
+.ia-msg-bubble--error { background:var(--red-glow); border-color:rgba(255,106,124,0.25); border-radius:14px 14px 14px 4px; color:var(--red); font-family:var(--mono); font-size:12px; }
+.ia-msg--welcome .ia-msg-bubble { background:linear-gradient(135deg,var(--bg3),var(--accent-glow)); border-color:rgba(203,60,255,0.18); }
+
+.ia-tip { font-size:11px; color:var(--text2); background:var(--bg2); border:1px solid var(--border2); border-radius:8px; padding:8px 12px; margin-top:4px; line-height:1.5; }
+
+.ia-send-tasks-btn { align-self:flex-start; padding:8px 14px; background:var(--green-glow); border:1px solid var(--green); border-radius:8px; color:var(--green); font-family:var(--sans); font-size:11px; font-weight:700; cursor:pointer; transition:background var(--transition), box-shadow var(--transition), opacity var(--transition), color var(--transition); letter-spacing:0.03em; margin-top:4px; }
+.ia-send-tasks-btn:hover { background:var(--green-glow2); box-shadow:0 0 14px var(--green-glow); }
+.ia-send-tasks-btn:disabled,.ia-send-tasks-btn.sent { background:var(--bg3); border-color:var(--border2); color:var(--text3); cursor:default; box-shadow:none; }
+
+.ia-typing { display:flex; align-items:center; gap:10px; padding:0 24px 10px; flex-shrink:0; }
+.ia-typing-dots { display:flex; gap:4px; align-items:center; }
+.ia-typing-dots span { width:6px; height:6px; border-radius:50%; background:var(--accent); animation:typingBounce 1.1s infinite ease-in-out; }
+.ia-typing-dots span:nth-child(1){animation-delay:0ms;} .ia-typing-dots span:nth-child(2){animation-delay:160ms;} .ia-typing-dots span:nth-child(3){animation-delay:320ms;}
+@keyframes typingBounce { 0%,60%,100%{transform:translateY(0);opacity:0.4;} 30%{transform:translateY(-5px);opacity:1;} }
+.ia-typing-label { font-family:var(--mono); font-size:10px; color:var(--text3); letter-spacing:0.06em; }
+
+.ia-input-area { display:flex; align-items:flex-end; gap:10px; padding:12px 24px 18px; border-top:1px solid var(--border); flex-shrink:0; background:rgba(255,255,255,0.01); }
+.ia-textarea { flex:1; min-height:40px; max-height:120px; resize:none; background:var(--bg3); border:1px solid var(--border2); border-radius:12px; color:var(--text1); font-family:var(--sans); font-size:13px; line-height:1.5; padding:10px 14px; outline:none; transition:border-color var(--transition), background var(--transition); overflow-y:auto; scrollbar-width:thin; }
+.ia-textarea:focus { border-color:var(--accent); background:var(--bg2); }
+.ia-textarea::placeholder { color:var(--text3); }
+
+.ia-send-btn { width:40px; height:40px; border-radius:50%; background:var(--accent); border:none; color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; transition:background var(--transition), transform var(--transition), opacity var(--transition), box-shadow var(--transition); box-shadow:0 0 14px var(--accent-glow); }
+.ia-send-btn:hover:not(:disabled) { background:var(--accent-dim); transform:scale(1.08); box-shadow:0 0 20px var(--accent-glow2); }
+.ia-send-btn:active:not(:disabled) { transform:scale(0.96); }
+.ia-send-btn:disabled { opacity:0.45; cursor:not-allowed; box-shadow:none; }
+.ia-send-btn.loading { animation:sendSpin 1s linear infinite; }
+@keyframes sendSpin { from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+.ia-send-icon { font-size:18px; font-weight:700; line-height:1; }
+
+/* Config Ollama */
+.cfg-input { flex:1; background:var(--bg3); border:1px solid var(--border2); border-radius:8px; color:var(--text1); font-family:var(--mono); font-size:12px; padding:7px 12px; outline:none; transition:border-color var(--transition), background var(--transition); min-width:0; }
+.cfg-input:focus { border-color:var(--accent); background:var(--bg2); }
+.cfg-input::placeholder { color:var(--text3); }
+.cfg-save-btn { padding:7px 16px; background:var(--accent-glow); border:1px solid var(--accent); border-radius:8px; color:var(--accent); font-family:var(--sans); font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap; transition:background var(--transition), box-shadow var(--transition); flex-shrink:0; }
+.cfg-save-btn:hover { background:var(--accent-glow2); box-shadow:0 0 12px var(--accent-glow); }

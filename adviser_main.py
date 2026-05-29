@@ -4,10 +4,9 @@ import os
 import json
 import queue
 import threading
+import requests
 import webview
 
-# win32gui es parte de pywin32. Si no está, usamos ctypes como fallback
-# (ctypes siempre está disponible en Windows sin instalar nada extra).
 try:
     import win32gui
     import win32con
@@ -15,26 +14,20 @@ try:
 except ImportError:
     _WIN32_AVAILABLE = False
 
-# Fallback via ctypes — funciona sin pywin32
 import ctypes
 import ctypes.wintypes
 _SW_SHOWMINIMIZED = 2
 
 def _hwnd_por_titulo(titulo):
-    """Busca un HWND por título de ventana usando ctypes puro."""
-    result = ctypes.c_ulong(0)
     FindWindowW = ctypes.windll.user32.FindWindowW
     FindWindowW.restype = ctypes.wintypes.HWND
-    hwnd = FindWindowW(None, titulo)
-    return hwnd
+    return FindWindowW(None, titulo)
 
 def _esta_minimizada_ctypes(titulo):
-    """Detecta si una ventana está minimizada usando ctypes (sin pywin32)."""
     try:
         hwnd = _hwnd_por_titulo(titulo)
         if not hwnd:
             return False
-        # GetWindowPlacement via ctypes
         class WINDOWPLACEMENT(ctypes.Structure):
             _fields_ = [
                 ("length",           ctypes.c_uint),
@@ -59,27 +52,23 @@ DIAS  = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo
 HORAS = list(range(24))
 
 if getattr(sys, 'frozen', False):
-    # Ejecutando como .exe compilado con PyInstaller
     _app_path = os.path.dirname(sys.executable)
-    # Si los HTML no están junto al .exe (caso --onefile), buscar en _MEIPASS
     if not os.path.exists(os.path.join(_app_path, "ui.html")):
         _app_path = sys._MEIPASS
 else:
     _app_path = os.path.dirname(os.path.abspath(__file__))
 
 def _ruta_web(nombre):
-    """Convierte una ruta de archivo a URL file:/// para pywebview."""
     ruta = os.path.join(_app_path, nombre)
     return "file:///" + ruta.replace("\\", "/")
 
-RUTA_JSON           = os.path.join(_app_path, "rutina.json")
-RUTA_ICON           = os.path.join(_app_path, "icon.png")
-RUTA_CONFIG         = os.path.join(_app_path, "config.json")
-RUTA_HTML           = _ruta_web("ui.html")
-RUTA_OVERLAY        = _ruta_web("overlay.html")
+RUTA_JSON    = os.path.join(_app_path, "rutina.json")
+RUTA_ICON    = os.path.join(_app_path, "icon.png")
+RUTA_CONFIG  = os.path.join(_app_path, "config.json")
+RUTA_HTML    = _ruta_web("ui.html")
+RUTA_OVERLAY = _ruta_web("overlay.html")
 
-
-# ─── Helpers ─────────────────────────────────────────────────────────────────
+# ─── Helpers ──────────────────────────────────────────────────────────────────
 def cargar_json(ruta, default):
     try:
         with open(ruta, "r", encoding="utf-8") as f:
@@ -114,12 +103,7 @@ def _toast(titulo, mensaje, loop=True):
     except Exception:
         pass
 
-
-# ─── Cola para el hilo principal ─────────────────────────────────────────────
-# PROBLEMA RAÍZ: webview.create_window() y window.destroy() SOLO pueden
-# llamarse desde el hilo principal de pywebview. Usar un threading.Thread
-# para crearlos falla silenciosamente.
-# SOLUCIÓN: una cola que el loop principal drena cada 200ms.
+# ─── Cola para el hilo principal ──────────────────────────────────────────────
 _main_queue = queue.Queue()
 
 def _drain_queue():
@@ -133,29 +117,74 @@ def _drain_queue():
             print(f"[Adviser queue] Error: {e}")
 
 
+# ═════════════════════════════════════════════════════════════════════════════
+#  OLLAMA — helpers
+# ═════════════════════════════════════════════════════════════════════════════
+
+def _ollama_chat(mensajes: list, config: dict) -> str:
+    """Llama a /api/chat de Ollama con historial completo."""
+    url    = config.get("ollama_url",    "http://localhost:11434")
+    modelo = config.get("ollama_modelo", "llama3")
+    r = requests.post(
+        f"{url}/api/chat",
+        json={"model": modelo, "messages": mensajes, "stream": False},
+        timeout=60,
+    )
+    r.raise_for_status()
+    return r.json()["message"]["content"].strip()
+
+
+def _construir_system_prompt(rutina: dict, dia_actual: str, hora_actual: int) -> str:
+    lineas = []
+    for h, entrada in enumerate(rutina.get(dia_actual, [])):
+        titulo = entrada[0] if entrada else "(Vacío)"
+        if titulo != "(Vacío)":
+            lineas.append(f"  {h:02d}:00 — {titulo}: {entrada[1]}")
+
+    rutina_str = "\n".join(lineas) if lineas else "  (sin actividades cargadas)"
+
+    return (
+        "Sos Adviser, un asistente de productividad personal integrado en una app de rutinas. "
+        "Hablás en español rioplatense, de forma directa, amigable y motivadora. "
+        "Sos conciso: respondés en 2-4 oraciones salvo que el usuario pida más detalle.\n\n"
+        f"Contexto actual:\n"
+        f"- Día: {dia_actual.capitalize()}\n"
+        f"- Hora: {hora_actual:02d}:00\n"
+        f"- Rutina de hoy:\n{rutina_str}\n\n"
+        "Podés hacer dos cosas:\n"
+        "1. GENERAR TAREAS: cuando el usuario describa algo que necesita hacer, "
+        "devolvé primero una respuesta breve y luego la lista marcada con '---TAREAS---' "
+        "seguida de cada tarea en una línea separada, sin numeración ni guiones.\n"
+        "2. CONVERSAR LIBREMENTE: respondé cualquier pregunta o charla.\n\n"
+        "Usá el contexto de la rutina cuando sea relevante para responder con precisión."
+    )
+
+
 # ─── API ──────────────────────────────────────────────────────────────────────
 class AdviserAPI:
     def __init__(self):
         self.bd           = cargar_json(RUTA_JSON, {})
-        self.config       = cargar_json(RUTA_CONFIG, {"tema": "dark"})
+        self.config       = cargar_json(RUTA_CONFIG, {
+            "tema":          "dark",
+            "ollama_url":    "http://localhost:11434",
+            "ollama_modelo": "llama3",
+        })
         self.running_flag = [False]
         self._window      = None
 
         self._crono = {
-            "activo":         False,
-            "tareas":         [],
-            "segs_restantes": 0,
-            "segs_total":     0,
+            "activo": False, "tareas": [],
+            "segs_restantes": 0, "segs_total": 0,
         }
         self._overlay_win  = None
         self._overlay_open = False
+        self._window_minimized = False
+        self._window_closing   = False
 
-        self._window_minimized    = False   # True cuando está minimizada
-        self._window_closing      = False   # True cuando se está cerrando (no abrir overlay)
+        # Historial del chat IA
+        self._chat_historial = []
 
-    # ═════════════════════════════════════════════════════════════════════════
-    #  RUTINA
-    # ═════════════════════════════════════════════════════════════════════════
+    # ═══════════════════════════════ RUTINA ══════════════════════════════════
     def get_rutina(self):
         for dia in DIAS:
             inicializar_dia(self.bd, dia)
@@ -172,17 +201,17 @@ class AdviserAPI:
         except Exception as e:
             return {"ok": False, "error": str(e)}
 
-    # ═════════════════════════════════════════════════════════════════════════
-    #  ESTADO / CONFIG
-    # ═════════════════════════════════════════════════════════════════════════
+    # ════════════════════════════ ESTADO / CONFIG ═════════════════════════════
     def get_estado_inicial(self):
         ahora = datetime.now()
         return {
-            "dia_actual":  DIAS[ahora.weekday()],
-            "hora_actual": ahora.hour,
-            "fecha_str":   ahora.strftime("%A %d de %B").capitalize(),
-            "tema":        self.config.get("tema", "dark"),
-            "asistente":   self.running_flag[0],
+            "dia_actual":    DIAS[ahora.weekday()],
+            "hora_actual":   ahora.hour,
+            "fecha_str":     ahora.strftime("%A %d de %B").capitalize(),
+            "tema":          self.config.get("tema", "dark"),
+            "asistente":     self.running_flag[0],
+            "ollama_url":    self.config.get("ollama_url",    "http://localhost:11434"),
+            "ollama_modelo": self.config.get("ollama_modelo", "llama3"),
         }
 
     def get_hora_actual(self):
@@ -194,9 +223,13 @@ class AdviserAPI:
         guardar_json(RUTA_CONFIG, self.config)
         return {"ok": True}
 
-    # ═════════════════════════════════════════════════════════════════════════
-    #  ASISTENTE
-    # ═════════════════════════════════════════════════════════════════════════
+    def guardar_config_ollama(self, url, modelo):
+        self.config["ollama_url"]    = url.strip()
+        self.config["ollama_modelo"] = modelo.strip()
+        guardar_json(RUTA_CONFIG, self.config)
+        return {"ok": True}
+
+    # ══════════════════════════════ ASISTENTE ═════════════════════════════════
     def toggle_asistente(self):
         if self.running_flag[0]:
             self.running_flag[0] = False
@@ -207,22 +240,17 @@ class AdviserAPI:
 
     def _loop_asistente(self):
         while self.running_flag[0]:
-            ahora   = datetime.now()
-            dia     = DIAS[ahora.weekday()]
-            hora    = ahora.hour
-            minuto  = ahora.minute
-            segundo = ahora.second
-
+            ahora  = datetime.now()
+            dia    = DIAS[ahora.weekday()]
+            hora   = ahora.hour
+            minuto = ahora.minute
+            seg    = ahora.second
             titulo  = "(Vacío)"
             mensaje = "Sin actividad asignada"
             if dia in self.bd and hora < len(self.bd[dia]):
                 titulo  = self.bd[dia][hora][0]
                 mensaje = self.bd[dia][hora][1]
-
-            # 1. Mostrar notificación de Windows
             _toast(titulo, mensaje)
-
-            # 2. Notificar a la ventana principal (resalta hora actual)
             if self._window:
                 try:
                     self._window.evaluate_js(
@@ -230,22 +258,17 @@ class AdviserAPI:
                     )
                 except Exception:
                     pass
-
-            espera = 3600 - (minuto * 60 + segundo)
+            espera = 3600 - (minuto * 60 + seg)
             for _ in range(espera + 2):
                 if not self.running_flag[0]:
                     break
                 time.sleep(1)
 
-    # ═════════════════════════════════════════════════════════════════════════
-    #  CRONÓMETRO
-    # ═════════════════════════════════════════════════════════════════════════
+    # ══════════════════════════════ CRONÓMETRO ════════════════════════════════
     def crono_iniciar(self, tareas_json, segs_total):
         tareas = json.loads(tareas_json) if isinstance(tareas_json, str) else list(tareas_json)
-        self._crono["activo"]         = True
-        self._crono["tareas"]         = tareas
-        self._crono["segs_restantes"] = int(segs_total)
-        self._crono["segs_total"]     = int(segs_total)
+        self._crono.update({"activo": True, "tareas": tareas,
+                            "segs_restantes": int(segs_total), "segs_total": int(segs_total)})
         threading.Thread(target=self._loop_crono, daemon=True).start()
         return {"ok": True}
 
@@ -256,14 +279,15 @@ class AdviserAPI:
             return {"ok": True}
         except Exception:
             return {"ok": False}
+
     def crono_agregar_tarea(self, texto):
-        """Agrega una tarea nueva al cronómetro en curso y notifica al overlay."""
         try:
             self._crono["tareas"].append({"texto": texto, "done": False})
-            self._push_overlay()   # notifica al overlay inmediatamente
+            self._push_overlay()
             return {"ok": True, "total": len(self._crono["tareas"])}
         except Exception as e:
             return {"ok": False, "error": str(e)}
+
     def crono_finalizar(self):
         self._crono["activo"] = False
         _main_queue.put(self._destruir_overlay)
@@ -284,7 +308,6 @@ class AdviserAPI:
             if not self._crono["activo"]:
                 return
             self._crono["segs_restantes"] -= 1
-
             if self._window:
                 try:
                     segs = self._crono["segs_restantes"]
@@ -293,7 +316,6 @@ class AdviserAPI:
                     )
                 except Exception:
                     pass
-
             self._push_overlay()
 
         if self._crono["activo"] and self._crono["segs_restantes"] <= 0:
@@ -310,19 +332,70 @@ class AdviserAPI:
                         pass
             _main_queue.put(self._destruir_overlay)
 
-    # ═════════════════════════════════════════════════════════════════════════
-    #  OVERLAY API (llamada desde overlay.html)
-    # ═════════════════════════════════════════════════════════════════════════
+    # ══════════════════════════════ IA — CHAT ═════════════════════════════════
+    def ia_enviar_mensaje(self, texto: str):
+        texto = texto.strip()
+        if not texto:
+            return {"ok": False, "error": "Mensaje vacío"}
+        self._chat_historial.append({"role": "user", "content": texto})
+        threading.Thread(target=self._ollama_worker, daemon=True).start()
+        return {"ok": True}
+
+    def _ollama_worker(self):
+        try:
+            ahora = datetime.now()
+            dia   = DIAS[ahora.weekday()]
+            hora  = ahora.hour
+            system_prompt = _construir_system_prompt(self.bd, dia, hora)
+            mensajes = [{"role": "system", "content": system_prompt}] + self._chat_historial
+            respuesta = _ollama_chat(mensajes, self.config)
+            self._chat_historial.append({"role": "assistant", "content": respuesta})
+
+            # Detectar lista de tareas en la respuesta
+            if "---TAREAS---" in respuesta:
+                partes = respuesta.split("---TAREAS---", 1)
+                respuesta_limpia = partes[0].strip()
+                tareas = [l.strip() for l in partes[1].splitlines() if l.strip()]
+            else:
+                respuesta_limpia = respuesta
+                tareas = []
+
+            resp_js   = json.dumps(respuesta_limpia)
+            tareas_js = json.dumps(tareas, ensure_ascii=False)
+
+            if self._window:
+                self._window.evaluate_js(
+                    f"window._iaRespuesta && window._iaRespuesta({resp_js}, {tareas_js})"
+                )
+
+        except requests.exceptions.ConnectionError:
+            url = self.config.get("ollama_url", "http://localhost:11434")
+            err = json.dumps(f"No pude conectarme a Ollama en {url}. ¿Está corriendo?")
+            if self._chat_historial and self._chat_historial[-1]["role"] == "user":
+                self._chat_historial.pop()
+            if self._window:
+                self._window.evaluate_js(f"window._iaError && window._iaError({err})")
+
+        except Exception as e:
+            err = json.dumps(f"Error inesperado: {str(e)}")
+            if self._chat_historial and self._chat_historial[-1]["role"] == "user":
+                self._chat_historial.pop()
+            if self._window:
+                self._window.evaluate_js(f"window._iaError && window._iaError({err})")
+
+    def ia_limpiar_historial(self):
+        self._chat_historial = []
+        return {"ok": True}
+
+    # ═══════════════════════════════ OVERLAY ═════════════════════════════════
     def overlay_get_estado(self):
         tareas = self._crono["tareas"]
         hechas = sum(1 for t in tareas if t.get("done", False))
         return {
             "segs_restantes": self._crono["segs_restantes"],
             "segs_total":     self._crono["segs_total"],
-            "hechas":         hechas,
-            "total":          len(tareas),
-            "tareas":         tareas,
-            "tema":           self.config.get("tema", "dark"),
+            "hechas": hechas, "total": len(tareas),
+            "tareas": tareas, "tema": self.config.get("tema", "dark"),
         }
 
     def overlay_restaurar_app(self):
@@ -334,74 +407,51 @@ class AdviserAPI:
         return {"ok": True}
 
     def overlay_cerrar(self):
-        """El usuario cerró el overlay manualmente desde el botón ✕."""
         _main_queue.put(self._destruir_overlay)
         return {"ok": True}
 
     def overlay_set_height(self, height):
-        """Redimensiona la ventana overlay al colapsar/expandir."""
         ov = self._overlay_win
         if ov is None:
             return {"ok": False}
         def _resize():
             try:
-                # Usar el ancho actual de la ventana en lugar de hardcodear 200
                 ov.resize(ov.width, int(height))
-            except Exception as e:
-                print(f"[Adviser] Error resize overlay: {e}")
+            except Exception:
+                pass
         _main_queue.put(_resize)
         return {"ok": True}
-    
-    
+
     def overlay_resize(self, width, height):
-        """Redimensiona el overlay por arrastre del handle. Llamado desde overlay.html."""
         ov = self._overlay_win
         if ov is None:
             return {"ok": False}
-        w = max(200, int(width))
-        h = max(120, int(height))
+        w, h = max(200, int(width)), max(120, int(height))
         def _resize():
             try:
                 ov.resize(w, h)
-            except Exception as e:
-                print(f"[Adviser] Error resize overlay: {e}")
+            except Exception:
+                pass
         _main_queue.put(_resize)
         return {"ok": True}
-    
 
-
-
-
-    # ═════════════════════════════════════════════════════════════════════════
-    #  DETECCIÓN DE ESTADO DE VENTANA (polling via win32gui)
-    # ═════════════════════════════════════════════════════════════════════════
+    # ════════════════════════ DETECCIÓN VENTANA ═══════════════════════════════
     def iniciar_monitor_ventana(self):
-        """Lanza un hilo que detecta minimizar/restaurar via win32gui."""
-        t = threading.Thread(target=self._poll_ventana, daemon=True)
-        t.start()
+        threading.Thread(target=self._poll_ventana, daemon=True).start()
 
     def _poll_ventana(self):
-        """Polling cada 500ms del estado real de la ventana via win32gui."""
         prev_minimized = False
-        print("[Adviser] Monitor de ventana iniciado.")
-
         while not self._window_closing:
             time.sleep(0.5)
             try:
                 is_min = self._es_ventana_minimizada()
-            except Exception as e:
-                print(f"[Adviser] Error en poll: {e}")
+            except Exception:
                 continue
-
             if is_min == prev_minimized:
                 continue
-
             prev_minimized = is_min
-            print(f"[Adviser] Estado ventana → {'MINIMIZADA' if is_min else 'RESTAURADA'}")
-
             if is_min:
                 self._window_minimized = True
-                # Overlay cronómetro
                 if self._crono["activo"]:
                     _main_queue.put(self._crear_overlay)
             else:
@@ -409,9 +459,6 @@ class AdviserAPI:
                 _main_queue.put(self._destruir_overlay)
 
     def _es_ventana_minimizada(self):
-        """Devuelve True si la ventana principal está minimizada.
-        Usa win32gui si está disponible, si no cae a ctypes puro.
-        """
         if self._window is None:
             return False
         if _WIN32_AVAILABLE:
@@ -419,71 +466,46 @@ class AdviserAPI:
                 hwnd = win32gui.FindWindow(None, "Adviser")
                 if not hwnd:
                     return False
-                placement = win32gui.GetWindowPlacement(hwnd)
-                return placement[1] == win32con.SW_SHOWMINIMIZED
+                return win32gui.GetWindowPlacement(hwnd)[1] == win32con.SW_SHOWMINIMIZED
             except Exception:
                 pass
-        # Fallback ctypes (siempre disponible en Windows)
         return _esta_minimizada_ctypes("Adviser")
 
-    # Mantener estos handlers para compatibilidad (pywebview los llama igual)
-    def on_main_minimized(self):
-        pass  # reemplazado por polling
-
+    def on_main_minimized(self): pass
     def on_main_closed(self):
         self._window_closing   = True
         self._window_minimized = False
+    def on_main_restored(self): pass
 
-    def on_main_restored(self):
-        pass  # reemplazado por polling
-
-    # ═════════════════════════════════════════════════════════════════════════
-    #  HELPERS QUE DEBEN CORRER EN EL HILO PRINCIPAL
-    # ═════════════════════════════════════════════════════════════════════════
+    # ════════════════════════ HELPERS HILO PRINCIPAL ══════════════════════════
     def _crear_overlay(self):
-        """Crea la ventana overlay. SOLO llamar desde el hilo principal."""
         if self._overlay_open:
             return
         try:
             ov = webview.create_window(
-                title            = "Adviser · Cronómetro",
-                url              = RUTA_OVERLAY,
-                js_api           = self,
-                width            = 250,
-                height           = 150,
-                resizable        = True,
-                frameless        = True,
-                on_top           = True,
-                background_color = "#0D1018",
+                title="Adviser · Cronómetro", url=RUTA_OVERLAY, js_api=self,
+                width=250, height=150, resizable=True, frameless=True,
+                on_top=True, background_color="#0D1018",
             )
             self._overlay_win  = ov
             self._overlay_open = True
- 
-            # Limpiar estado cuando el overlay se cierra.
-            def _on_overlay_closed():
+            def _on_closed():
                 self._overlay_win  = None
                 self._overlay_open = False
-                print("[Adviser] Overlay cerrado.")
- 
-            ov.events.closed += _on_overlay_closed
- 
-            print("[Adviser] Overlay abierto.")
+            ov.events.closed += _on_closed
         except Exception as e:
             print(f"[Adviser] Error al crear overlay: {e}")
 
     def _destruir_overlay(self):
-        """Destruye la ventana overlay. SOLO llamar desde el hilo principal."""
         if self._overlay_win is not None:
             try:
                 self._overlay_win.destroy()
-                print("[Adviser] Overlay cerrado.")
-            except Exception as e:
-                print(f"[Adviser] Error al cerrar overlay: {e}")
+            except Exception:
+                pass
         self._overlay_win  = None
         self._overlay_open = False
 
     def _push_overlay(self):
-        """Envía tick al overlay. Puede llamarse desde cualquier hilo."""
         ov = self._overlay_win
         if ov is None:
             return
@@ -491,21 +513,16 @@ class AdviserAPI:
             segs   = self._crono["segs_restantes"]
             tareas = self._crono["tareas"]
             hechas = sum(1 for t in tareas if t.get("done", False))
-            total  = len(tareas)
-            tareas_json = json.dumps(tareas)
             ov.evaluate_js(
-                f"window._ovTick && window._ovTick({segs}, {hechas}, {total}, {tareas_json})"
+                f"window._ovTick && window._ovTick({segs}, {hechas}, "
+                f"{len(tareas)}, {json.dumps(tareas)})"
             )
         except Exception:
             pass
 
 
-# ─── Loop del hilo principal (drena la cola) ──────────────────────────────────
+# ─── Loop principal ───────────────────────────────────────────────────────────
 def _main_loop(api):
-    """
-    Se pasa como `func` a webview.start(). Corre en el hilo principal de pywebview,
-    lo que hace seguro llamar create_window() y destroy() desde aquí.
-    """
     while True:
         time.sleep(0.2)
         _drain_queue()
@@ -515,27 +532,13 @@ def _main_loop(api):
 if __name__ == "__main__":
     api    = AdviserAPI()
     window = webview.create_window(
-        title            = "Adviser",
-        url              = RUTA_HTML,
-        js_api           = api,
-        width            = 960,
-        height           = 680,
-        min_size         = (820, 560),
-        frameless        = False,
-        resizable        = True,
-        background_color = "#080A0F",
+        title="Adviser", url=RUTA_HTML, js_api=api,
+        width=960, height=680, min_size=(820, 560),
+        frameless=False, resizable=True, background_color="#080A0F",
     )
     api._window = window
-
     window.events.minimized += api.on_main_minimized
     window.events.restored  += api.on_main_restored
     window.events.closed    += api.on_main_closed
-
-    # Arrancar monitor de ventana (polling win32gui) una vez que webview esté listo
-    def _on_loaded():
-        api.iniciar_monitor_ventana()
-
-    window.events.loaded += _on_loaded
-
-    # func= corre en el hilo principal → puede crear/destruir ventanas de forma segura
+    window.events.loaded    += lambda: api.iniciar_monitor_ventana()
     webview.start(_main_loop, api, debug=False)

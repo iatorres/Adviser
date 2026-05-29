@@ -1,3 +1,5 @@
 {
-    "tema": "dark"
+    "tema": "dark",
+    "ollama_url": "http://localhost:11434",
+    "ollama_modelo": "llama3"
 }
